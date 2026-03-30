@@ -2,14 +2,14 @@ import { useNotify, useSafeSetState, Form, TextInput, PasswordInput, Button } fr
 import { Box, Card, CardActions, Typography } from "@mui/material";
 import { httpClient } from "./httpClient";
 
-// 1. Описываем форму. Теперь никаких "any".
+// Интерфейс для типизации значений формы
 interface RegisterValues {
   email?: string;
   password?: string;
 }
 
 const RegistrationPage = () => {
-  // 2. Используем внутренний хук react-admin вместо useState из react
+  // Используем безопасное состояние из react-admin
   const [loading, setLoading] = useSafeSetState<boolean>(false);
   const notify = useNotify();
   const tokenKey = import.meta.env.VITE_AUTH_TOKEN_KEY || "cr_admin_token";
@@ -19,26 +19,28 @@ const RegistrationPage = () => {
 
     setLoading(true);
     try {
+      // Отправка данных на бэкенд (мапим почту в логин)
       const response = await httpClient("/auth/register", {
         method: "POST",
         body: JSON.stringify({
           email: values.email,
           password: values.password,
-          userName: values.email, // Используем почту как логин
+          userName: values.email,
         }),
       });
 
+      // Сохраняем полученные данные для авторизации
       localStorage.setItem(tokenKey, response.token);
       localStorage.setItem(`${tokenKey}_roles`, JSON.stringify(response.roles || []));
 
-      notify("Регистрация успешна!", { type: "success" });
+      notify("Registration successful!", { type: "success" });
 
-      // Переход в корень приложения
+      // Переход на главную
       window.location.href = "/";
     } catch (error: unknown) {
       setLoading(false);
-      // 3. Безопасное извлечение сообщения об ошибке
-      const message = error instanceof Error ? error.message : "Ошибка при регистрации";
+      // Обработка ошибки с проверкой типа
+      const message = error instanceof Error ? error.message : "Registration failed";
       notify(message, { type: "warning" });
     }
   };
@@ -56,17 +58,17 @@ const RegistrationPage = () => {
       <Card sx={{ minWidth: 350, padding: "1.5em", borderRadius: "12px" }}>
         <Box sx={{ textAlign: "center", marginBottom: "1.5em" }}>
           <Typography variant="h5" fontWeight="bold">
-            Costa Rica Guider
+            Admin Panel
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            Создание аккаунта (Email = Логин)
+            Create an account (Email will be your login)
           </Typography>
         </Box>
 
         <Form onSubmit={handleSubmit}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <TextInput source="email" label="Email" type="email" fullWidth required />
-            <PasswordInput source="password" label="Пароль" fullWidth required />
+            <PasswordInput source="password" label="Password" fullWidth required />
           </Box>
           <CardActions sx={{ padding: "1em 0" }}>
             <Button
@@ -75,7 +77,7 @@ const RegistrationPage = () => {
               color="primary"
               disabled={loading}
               fullWidth
-              label={loading ? "Загрузка..." : "Зарегистрироваться"}
+              label={loading ? "Loading..." : "Register"}
             />
           </CardActions>
         </Form>
@@ -83,7 +85,7 @@ const RegistrationPage = () => {
         <Box sx={{ textAlign: "center", marginTop: "1em" }}>
           <Typography variant="body2">
             <a href="#/login" style={{ textDecoration: "none", color: "#3b82f6", fontWeight: 500 }}>
-              Назад ко входу
+              Back to Login
             </a>
           </Typography>
         </Box>
