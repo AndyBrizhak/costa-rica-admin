@@ -8,36 +8,37 @@ export const authProvider: AuthProvider = {
   // Вход в систему: мапим username из формы в email для бэкенда
   login: async ({ username, password }) => {
     try {
-      const response = await httpClient("/auth/login", {
+      // httpClient теперь возвращает { status, headers, body, json }
+      const { json } = await httpClient("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email: username, password }),
       });
 
-      // Бэкенд возвращает id, token и roles
-      localStorage.setItem(TOKEN_KEY, response.token);
-      localStorage.setItem(`${TOKEN_KEY}_roles`, JSON.stringify(response.roles || []));
+      // Данные (token и roles) теперь берем из поля json
+      localStorage.setItem(TOKEN_KEY, json.token);
+      localStorage.setItem(`${TOKEN_KEY}_roles`, JSON.stringify(json.roles || []));
 
       return Promise.resolve();
     } catch (error: unknown) {
-      // Проверяем, является ли пойманный объект экземпляром стандартной Ошибки
-      const message = error instanceof Error ? error.message : "Ошибка аутентификации";
+      // Извлекаем сообщение об ошибке из объекта, если оно там есть
+      const message = error instanceof Error ? error.message : "Authentication failed";
       throw new Error(message);
     }
   },
 
-  // Выход: просто чистим локальное хранилище
+  // Выход: чистим локальное хранилище
   logout: () => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(`${TOKEN_KEY}_roles`);
     return Promise.resolve();
   },
 
-  // Простая проверка: есть ли у нас токен в принципе
+  // Проверка: есть ли у нас токен
   checkAuth: () => {
     return localStorage.getItem(TOKEN_KEY) ? Promise.resolve() : Promise.reject();
   },
 
-  // Если API вернуло 401 или 403 — токен невалиден, разлогиниваем пользователя
+  // Если API вернуло 401 или 403 — разлогиниваем пользователя
   checkError: (error) => {
     const status = error.status;
     if (status === 401 || status === 403) {
@@ -51,17 +52,18 @@ export const authProvider: AuthProvider = {
   // Получение данных профиля через эндпоинт /me
   getIdentity: async () => {
     try {
-      const user = await httpClient("/auth/me");
+      // Здесь тоже достаем json из ответа
+      const { json } = await httpClient("/auth/me");
       return Promise.resolve({
-        id: user.id,
-        fullName: user.email, // Используем email как отображаемое имя
+        id: json.id,
+        fullName: json.email, // Используем email как отображаемое имя
       });
     } catch (error) {
       return Promise.reject(error);
     }
   },
 
-  // Извлечение ролей (Admin, Manager и т.д.) для управления доступом
+  // Проверка прав (roles)
   getPermissions: () => {
     const roles = localStorage.getItem(`${TOKEN_KEY}_roles`);
     return roles ? Promise.resolve(JSON.parse(roles)) : Promise.resolve([]);

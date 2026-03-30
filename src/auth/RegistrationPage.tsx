@@ -9,7 +9,7 @@ interface RegisterValues {
 }
 
 const RegistrationPage = () => {
-  // Используем безопасное состояние из react-admin
+  // Используем безопасное состояние из react-admin для предотвращения утечек памяти
   const [loading, setLoading] = useSafeSetState<boolean>(false);
   const notify = useNotify();
   const tokenKey = import.meta.env.VITE_AUTH_TOKEN_KEY || "cr_admin_token";
@@ -19,8 +19,8 @@ const RegistrationPage = () => {
 
     setLoading(true);
     try {
-      // Отправка данных на бэкенд (мапим почту в логин)
-      const response = await httpClient("/auth/register", {
+      // httpClient теперь возвращает объект { status, headers, body, json }
+      const { json } = await httpClient("/auth/register", {
         method: "POST",
         body: JSON.stringify({
           email: values.email,
@@ -29,17 +29,17 @@ const RegistrationPage = () => {
         }),
       });
 
-      // Сохраняем полученные данные для авторизации
-      localStorage.setItem(tokenKey, response.token);
-      localStorage.setItem(`${tokenKey}_roles`, JSON.stringify(response.roles || []));
+      // Сохраняем полученные данные (token и roles) из вложенного объекта json
+      localStorage.setItem(tokenKey, json.token);
+      localStorage.setItem(`${tokenKey}_roles`, JSON.stringify(json.roles || []));
 
       notify("Registration successful!", { type: "success" });
 
-      // Переход на главную
+      // Принудительный редирект на главную (авторизованную) зону
       window.location.href = "/";
     } catch (error: unknown) {
       setLoading(false);
-      // Обработка ошибки с проверкой типа
+      // Пытаемся извлечь сообщение об ошибке
       const message = error instanceof Error ? error.message : "Registration failed";
       notify(message, { type: "warning" });
     }
