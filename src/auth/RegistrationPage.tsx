@@ -14,25 +14,21 @@ import { Box, Card, CardActions, Typography } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { httpClient } from "./httpClient";
 
-// Интерфейс для значений формы
 interface RegisterValues {
   email?: string;
   password?: string;
 }
 
-// Интерфейс для структуры ошибок API
+// Обновленный интерфейс ошибки под твой бэкенд
 interface HttpError {
   status: number;
-  message: string;
   body?: {
-    message?: string;
-    errors?: string[];
+    errors?: string[]; // Бэкенд возвращает массив строк здесь
   };
+  message: string;
 }
 
-// Правила валидации
 const validateEmail = [required("Email is required"), email("Must be a valid email address")];
-
 const validatePassword = [
   required("Password is required"),
   minLength(8, "Password must be at least 8 characters long"),
@@ -63,12 +59,22 @@ const RegistrationPage = () => {
       notify("Account created successfully!", { type: "success" });
     } catch (error: unknown) {
       setLoading(false);
-
-      // Безопасное приведение типа для ошибки
       const err = error as HttpError;
-      const errorMessage = err.body?.message || err.message || "Registration failed";
 
-      notify(errorMessage, { type: "warning" });
+      // ЛОГИКА ОБРАБОТКИ ОШИБОК БЭКЕНДА:
+      // 1. Проверяем, есть ли массив ошибок от сервера
+      if (err.body?.errors && Array.isArray(err.body.errors)) {
+        // Выводим все ошибки через перенос строки или берем первую
+        const serverMessage = err.body.errors.join(". ");
+        notify(serverMessage, { type: "warning" });
+      } else {
+        // 2. Если бэкенд не прислал массив, выводим общую ошибку на английском
+        notify("Registration failed. Please check your connection or try again later.", {
+          type: "warning",
+        });
+      }
+
+      console.error("Technical error details:", err.body);
     }
   };
 
@@ -114,7 +120,7 @@ const RegistrationPage = () => {
                   color="textSecondary"
                   sx={{ mt: 1, display: "block" }}
                 >
-                  * Password must be 8+ chars with uppercase, digit and symbol.
+                  * Use at least 8 characters with a mix of letters, numbers & symbols.
                 </Typography>
               </Box>
               <CardActions sx={{ padding: "1.5em 0 0 0" }}>
@@ -123,7 +129,7 @@ const RegistrationPage = () => {
                   type="submit"
                   color="primary"
                   disabled={loading}
-                  label={loading ? "Checking..." : "Register"}
+                  label={loading ? "Processing..." : "Register"}
                   sx={{ width: "100%", py: 1 }}
                 />
               </CardActions>
@@ -141,7 +147,7 @@ const RegistrationPage = () => {
             <Button
               variant="contained"
               color="primary"
-              label="Go to Login"
+              label="Back to Login"
               onClick={() => (window.location.href = "#/login")}
               sx={{ width: "100%", py: 1 }}
             />
