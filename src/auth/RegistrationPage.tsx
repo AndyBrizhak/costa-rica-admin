@@ -1,18 +1,46 @@
-import { useNotify, useSafeSetState, Form, TextInput, PasswordInput, Button } from "react-admin";
+import {
+  useNotify,
+  useSafeSetState,
+  Form,
+  TextInput,
+  PasswordInput,
+  Button,
+  required,
+  email,
+  minLength,
+  regex,
+} from "react-admin";
 import { Box, Card, CardActions, Typography } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { httpClient } from "./httpClient";
 
+// Интерфейс для значений формы
 interface RegisterValues {
   email?: string;
   password?: string;
 }
 
+// Интерфейс для структуры ошибок API
 interface HttpError {
   status: number;
   message: string;
-  body?: { message?: string; errors?: string[] };
+  body?: {
+    message?: string;
+    errors?: string[];
+  };
 }
+
+// Правила валидации
+const validateEmail = [required("Email is required"), email("Must be a valid email address")];
+
+const validatePassword = [
+  required("Password is required"),
+  minLength(8, "Password must be at least 8 characters long"),
+  regex(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+    "Password must contain uppercase, lowercase, number and special character",
+  ),
+];
 
 const RegistrationPage = () => {
   const [loading, setLoading] = useSafeSetState<boolean>(false);
@@ -20,9 +48,7 @@ const RegistrationPage = () => {
   const notify = useNotify();
 
   const handleSubmit = async (values: RegisterValues) => {
-    if (!values.email || !values.password) return;
     setLoading(true);
-
     try {
       await httpClient("/auth/register", {
         method: "POST",
@@ -33,13 +59,15 @@ const RegistrationPage = () => {
         }),
       });
 
-      // Вместо редиректа и записи токена, переключаем состояние
       setIsRegistered(true);
       notify("Account created successfully!", { type: "success" });
     } catch (error: unknown) {
       setLoading(false);
+
+      // Безопасное приведение типа для ошибки
       const err = error as HttpError;
       const errorMessage = err.body?.message || err.message || "Registration failed";
+
       notify(errorMessage, { type: "warning" });
     }
   };
@@ -54,7 +82,7 @@ const RegistrationPage = () => {
         background: "linear-gradient(45deg, #1e293b 30%, #0f172a 90%)",
       }}
     >
-      <Card sx={{ minWidth: 350, padding: "2em", borderRadius: "12px", boxShadow: 3 }}>
+      <Card sx={{ minWidth: 380, padding: "2em", borderRadius: "12px", boxShadow: 3 }}>
         {!isRegistered ? (
           <>
             <Box sx={{ textAlign: "center", marginBottom: "1.5em" }}>
@@ -67,9 +95,27 @@ const RegistrationPage = () => {
             </Box>
 
             <Form onSubmit={handleSubmit}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <TextInput source="email" label="Email" type="email" fullWidth required />
-                <PasswordInput source="password" label="Password" fullWidth required />
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <TextInput
+                  source="email"
+                  label="Email (Login)"
+                  type="email"
+                  fullWidth
+                  validate={validateEmail}
+                />
+                <PasswordInput
+                  source="password"
+                  label="Password"
+                  fullWidth
+                  validate={validatePassword}
+                />
+                <Typography
+                  variant="caption"
+                  color="textSecondary"
+                  sx={{ mt: 1, display: "block" }}
+                >
+                  * Password must be 8+ chars with uppercase, digit and symbol.
+                </Typography>
               </Box>
               <CardActions sx={{ padding: "1.5em 0 0 0" }}>
                 <Button
@@ -77,7 +123,7 @@ const RegistrationPage = () => {
                   type="submit"
                   color="primary"
                   disabled={loading}
-                  label={loading ? "Registering..." : "Register"}
+                  label={loading ? "Checking..." : "Register"}
                   sx={{ width: "100%", py: 1 }}
                 />
               </CardActions>
@@ -90,7 +136,7 @@ const RegistrationPage = () => {
               Success!
             </Typography>
             <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-              Your account has been created. Now you can log in with your credentials.
+              Your account has been created.
             </Typography>
             <Button
               variant="contained"
