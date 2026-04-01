@@ -2,9 +2,8 @@ import { Login, LoginForm } from "react-admin";
 import { Box, Card, Typography } from "@mui/material";
 
 /**
- * Кастомная страница входа.
- * Мы оборачиваем стандартный LoginForm в наш макет,
- * чтобы добавить ссылку на регистрацию и выдержать единый стиль.
+ * Компактная страница входа.
+ * Ссылка на регистрацию перенесена наверх, чтобы она не скрывалась при прокрутке.
  */
 const LoginPage = () => {
   return (
@@ -18,47 +17,37 @@ const LoginPage = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          marginTop: "2em",
+          marginTop: "1em", // Уменьшили отступ сверху
         }}
       >
-        <Card sx={{ minWidth: 350, padding: "1.5em", borderRadius: "12px", boxShadow: 3 }}>
-          <Box sx={{ textAlign: "center", marginBottom: "1em" }}>
+        <Card sx={{ minWidth: 350, padding: "1.2em", borderRadius: "12px", boxShadow: 3 }}>
+          <Box sx={{ textAlign: "center", marginBottom: "0.5em" }}>
             <Typography variant="h5" fontWeight="bold">
               Admin Panel
             </Typography>
+            {/* Перенесли ссылку наверх для лучшей видимости */}
             <Typography variant="body2" color="textSecondary">
-              Please sign in to continue
-            </Typography>
-          </Box>
-
-          {/* Стандартная форма логина, которая вызывает authProvider.login */}
-          <LoginForm />
-
-          <Box
-            sx={{
-              textAlign: "center",
-              marginTop: "1.5em",
-              borderTop: "1px solid #eee",
-              paddingTop: "1em",
-            }}
-          >
-            <Typography variant="body2" color="textSecondary">
-              Don't have an account?
-            </Typography>
-            <Typography variant="body2">
+              Sign in or{" "}
               <a
                 href="#/register"
                 style={{
                   textDecoration: "none",
                   color: "#3b82f6",
-                  fontWeight: 500,
-                  fontSize: "1rem",
+                  fontWeight: 600,
                 }}
               >
                 Register now
               </a>
             </Typography>
           </Box>
+
+          {/* Сама форма логина */}
+          <LoginForm
+            sx={{
+              "& .MuiCardContent-root": { padding: "8px 16px" }, // Сужаем внутренние отступы формы
+              "& .MuiButton-root": { marginTop: "1em" },
+            }}
+          />
         </Card>
       </Box>
     </Login>

@@ -1,33 +1,20 @@
-import {
-  List,
-  Datagrid,
-  TextField,
-  EmailField,
-  ArrayField,
-  SingleFieldList,
-  ChipField,
-} from "react-admin";
+import React from "react";
+import { List, Datagrid, TextField, EmailField, DeleteButton, BulkDeleteButton } from "react-admin";
 
 /**
- * Компонент для отображения списка пользователей.
- * Мы используем только необходимые компоненты, чтобы избежать ошибок компиляции.
+ * Кнопки массовых действий для списка.
+ * Режим pessimistic обязателен для предотвращения ошибок с ID.
  */
+const UserBulkActionButtons = () => <BulkDeleteButton mutationMode="pessimistic" />;
+
 export const UserList = () => (
   <List>
-    <Datagrid rowClick="edit">
-      {/* Уникальный идентификатор пользователя */}
-      <TextField source="id" label="ID" />
-
-      {/* Имя пользователя и Email */}
+    <Datagrid rowClick="edit" bulkActionButtons={<UserBulkActionButtons />}>
       <TextField source="userName" label="Username" />
       <EmailField source="email" label="Email Address" />
 
-      {/* Роли пользователя: отображаем массив строк как набор графических тегов (Chips) */}
-      <ArrayField source="roles" label="User Roles">
-        <SingleFieldList linkType={false}>
-          <ChipField source="id" size="small" sx={{ fontWeight: "bold" }} />
-        </SingleFieldList>
-      </ArrayField>
+      {/* Кнопка удаления в строке */}
+      <DeleteButton mutationMode="pessimistic" />
     </Datagrid>
   </List>
 );

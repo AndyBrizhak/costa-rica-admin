@@ -1,58 +1,80 @@
-import { useNotify, useSafeSetState, Form, TextInput, PasswordInput, Button } from "react-admin";
+import {
+  useNotify,
+  useSafeSetState,
+  Form,
+  TextInput,
+  PasswordInput,
+  Button,
+  required,
+  email,
+  minLength,
+  regex,
+} from "react-admin";
 import { Box, Card, CardActions, Typography } from "@mui/material";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { httpClient } from "./httpClient";
 
-// 1. Описываем структуру данных формы
 interface RegisterValues {
   email?: string;
   password?: string;
 }
 
-// 2. Описываем структуру ошибки, которую может вернуть наш httpClient (fetchUtils)
+// Обновленный интерфейс ошибки под твой бэкенд
 interface HttpError {
   status: number;
-  message: string;
   body?: {
-    message?: string;
-    errors?: string[];
+    errors?: string[]; // Бэкенд возвращает массив строк здесь
   };
+  message: string;
 }
+
+const validateEmail = [required("Email is required"), email("Must be a valid email address")];
+const validatePassword = [
+  required("Password is required"),
+  minLength(8, "Password must be at least 8 characters long"),
+  regex(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+    "Password must contain uppercase, lowercase, number and special character",
+  ),
+];
 
 const RegistrationPage = () => {
   const [loading, setLoading] = useSafeSetState<boolean>(false);
+  const [isRegistered, setIsRegistered] = useSafeSetState<boolean>(false);
   const notify = useNotify();
-  const tokenKey = import.meta.env.VITE_AUTH_TOKEN_KEY || "cr_admin_token";
 
   const handleSubmit = async (values: RegisterValues) => {
-    if (!values.email || !values.password) return;
-
     setLoading(true);
     try {
-      const { json } = await httpClient("/auth/register", {
+      await httpClient("/auth/register", {
         method: "POST",
         body: JSON.stringify({
           email: values.email,
           password: values.password,
-          userName: values.email, // Используем email как username по умолчанию
+          userName: values.email,
         }),
       });
 
-      localStorage.setItem(tokenKey, json.token);
-      localStorage.setItem(`${tokenKey}_roles`, JSON.stringify(json.roles || []));
-
-      notify("Registration successful!", { type: "success" });
-      window.location.href = "/";
+      setIsRegistered(true);
+      notify("Account created successfully!", { type: "success" });
     } catch (error: unknown) {
       setLoading(false);
-
-      // Приводим ошибку к нашему интерфейсу
       const err = error as HttpError;
 
-      // Пытаемся достать внятное описание ошибки из ответа Identity
-      const errorMessage = err.body?.message || err.message || "Registration failed";
+      // ЛОГИКА ОБРАБОТКИ ОШИБОК БЭКЕНДА:
+      // 1. Проверяем, есть ли массив ошибок от сервера
+      if (err.body?.errors && Array.isArray(err.body.errors)) {
+        // Выводим все ошибки через перенос строки или берем первую
+        const serverMessage = err.body.errors.join(". ");
+        notify(serverMessage, { type: "warning" });
+      } else {
+        // 2. Если бэкенд не прислал массив, выводим общую ошибку на английском
+        notify("Registration failed. Please check your connection or try again later.", {
+          type: "warning",
+        });
+      }
 
-      notify(errorMessage, { type: "warning" });
-      console.error("Registration technical details:", err.body);
+      console.error("Technical error details:", err.body);
     }
   };
 
@@ -66,40 +88,71 @@ const RegistrationPage = () => {
         background: "linear-gradient(45deg, #1e293b 30%, #0f172a 90%)",
       }}
     >
-      <Card sx={{ minWidth: 350, padding: "2em", borderRadius: "12px", boxShadow: 3 }}>
-        <Box sx={{ textAlign: "center", marginBottom: "1.5em" }}>
-          <Typography variant="h5" fontWeight="bold">
-            Admin Panel
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Create a new account
-          </Typography>
-        </Box>
+      <Card sx={{ minWidth: 380, padding: "2em", borderRadius: "12px", boxShadow: 3 }}>
+        {!isRegistered ? (
+          <>
+            <Box sx={{ textAlign: "center", marginBottom: "1.5em" }}>
+              <Typography variant="h5" fontWeight="bold">
+                Admin Panel
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Create a new account
+              </Typography>
+            </Box>
 
-        <Form onSubmit={handleSubmit}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextInput source="email" label="Email" type="email" fullWidth required />
-            <PasswordInput source="password" label="Password" fullWidth required />
-          </Box>
-          <CardActions sx={{ padding: "1.5em 0 0 0" }}>
+            <Form onSubmit={handleSubmit}>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <TextInput
+                  source="email"
+                  label="Email (Login)"
+                  type="email"
+                  fullWidth
+                  validate={validateEmail}
+                />
+                <PasswordInput
+                  source="password"
+                  label="Password"
+                  fullWidth
+                  validate={validatePassword}
+                />
+                <Typography
+                  variant="caption"
+                  color="textSecondary"
+                  sx={{ mt: 1, display: "block" }}
+                >
+                  * Use at least 8 characters with a mix of letters, numbers & symbols.
+                </Typography>
+              </Box>
+              <CardActions sx={{ padding: "1.5em 0 0 0" }}>
+                <Button
+                  variant="contained"
+                  type="submit"
+                  color="primary"
+                  disabled={loading}
+                  label={loading ? "Processing..." : "Register"}
+                  sx={{ width: "100%", py: 1 }}
+                />
+              </CardActions>
+            </Form>
+          </>
+        ) : (
+          <Box sx={{ textAlign: "center", py: 2 }}>
+            <CheckCircleOutlineIcon sx={{ fontSize: 60, color: "#10b981", mb: 2 }} />
+            <Typography variant="h5" fontWeight="bold" gutterBottom>
+              Success!
+            </Typography>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
+              Your account has been created.
+            </Typography>
             <Button
               variant="contained"
-              type="submit"
               color="primary"
-              disabled={loading}
-              label={loading ? "Registering..." : "Register"}
+              label="Back to Login"
+              onClick={() => (window.location.href = "#/login")}
               sx={{ width: "100%", py: 1 }}
             />
-          </CardActions>
-        </Form>
-
-        <Box sx={{ textAlign: "center", marginTop: "1.5em" }}>
-          <Typography variant="body2">
-            <a href="#/login" style={{ textDecoration: "none", color: "#3b82f6", fontWeight: 500 }}>
-              Already have an account? Login
-            </a>
-          </Typography>
-        </Box>
+          </Box>
+        )}
       </Card>
     </Box>
   );
