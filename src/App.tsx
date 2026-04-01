@@ -6,10 +6,11 @@ import { httpClient } from "./auth/httpClient";
 import RegistrationPage from "./auth/RegistrationPage";
 import LoginPage from "./auth/LoginPage";
 import { UserList } from "./users/UserList";
+import { UserEdit } from "./users/UserEdit"; // Импорт нового компонента редактирования
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-// Инициализация dataProvider с использованием нашего httpClient для передачи токенов
+// Инициализация dataProvider с использованием кастомного httpClient для обработки токенов
 const dataProvider = simpleRestProvider(apiUrl, httpClient);
 
 export const App = () => (
@@ -18,12 +19,14 @@ export const App = () => (
       <Route path="/register" element={<RegistrationPage />} />
     </CustomRoutes>
 
-    {/* recordRepresentation="userName" указывает React Admin использовать поле userName 
-        для заголовков и уведомлений об удалении/изменении.
+    {/* Настройка ресурса пользователей:
+        1. edit={UserEdit} — подключает страницу редактирования ролей.
+        2. recordRepresentation="userName" — заменяет технический ID на логин в заголовках и уведомлениях.
     */}
     <Resource
       name="admin/users"
       list={UserList}
+      edit={UserEdit}
       options={{ label: "Users" }}
       recordRepresentation="userName"
     />
