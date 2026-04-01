@@ -33,7 +33,7 @@ const validatePassword = [
   required("Password is required"),
   minLength(8, "Password must be at least 8 characters long"),
   regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s])[A-Za-z\d[^\w\s]]{8,}$/,
     "Password must contain uppercase, lowercase, number and special character",
   ),
 ];
