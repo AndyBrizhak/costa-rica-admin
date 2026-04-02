@@ -11,7 +11,6 @@ import {
 
 /**
  * Интерфейс, описывающий структуру данных провинции.
- * Соответствует ProvinceResponseDto на бэкенде.
  */
 export interface ProvinceRecord extends RaRecord {
   id: string;
@@ -20,8 +19,7 @@ export interface ProvinceRecord extends RaRecord {
 }
 
 /**
- * Компонент фильтров для поиска.
- * source="Q" соответствует параметру в ProvinceQueryParameters на бэкенде.
+ * Компонент фильтров для поиска через параметр Q.
  */
 const ProvinceFilters = [<FilterLiveSearch source="Q" alwaysOn />];
 
@@ -33,16 +31,16 @@ const ProvinceBulkActionButtons = () => (
 );
 
 /**
- * Список провинций (Table View)
+ * Список провинций без колонки ID.
  */
 export const ProvinceList = () => (
   <List
     filters={ProvinceFilters}
     sort={{ field: "name", order: "ASC" }}
-    exporter={false} // Отключаем экспорт, так как записей всего 7
+    exporter={false}
   >
     <Datagrid rowClick="edit" bulkActionButtons={<ProvinceBulkActionButtons />}>
-      <TextField source="id" label="ID" />
+      {/* Колонку с ID убрали, оставив только значимые данные */}
       <TextField source="name" label="Название" />
       <TextField source="slug" label="Слаг (SEO)" />
 
