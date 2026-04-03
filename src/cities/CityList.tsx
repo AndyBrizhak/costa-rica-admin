@@ -7,7 +7,6 @@ import {
   SelectInput,
   EditButton,
   DeleteButton,
-  BulkDeleteButton,
   FilterLiveSearch,
 } from "react-admin";
 
@@ -18,13 +17,12 @@ const CityFilters = [
   </ReferenceInput>,
 ];
 
-const CityBulkActionButtons = () => (
-  <BulkDeleteButton mutationMode="pessimistic" />
-);
-
 export const CityList = () => (
   <List filters={CityFilters} exporter={false}>
-    <Datagrid rowClick="edit" bulkActionButtons={<CityBulkActionButtons />}>
+    {/* bulkActionButtons={false} полностью убирает колонку с чекбоксами 
+        и блокирует функционал массового удаления.
+    */}
+    <Datagrid rowClick="edit" bulkActionButtons={false}>
       <TextField source="name" label="Название" />
       <TextField source="slug" label="Слаг" />
 
