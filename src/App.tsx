@@ -1,7 +1,7 @@
 import { Admin, Resource, CustomRoutes } from "react-admin";
 import { Route } from "react-router-dom";
 import simpleRestProvider from "ra-data-simple-rest";
-import { Map, Users } from "lucide-react";
+import { Map, Users, MapPin } from "lucide-react";
 
 import { authProvider } from "./auth/authProvider";
 import { httpClient } from "./auth/httpClient";
@@ -14,6 +14,10 @@ import { UserEdit } from "./users/UserEdit";
 import { ProvinceList } from "./provinces/ProvinceList";
 import { ProvinceCreate } from "./provinces/ProvinceCreate";
 import { ProvinceEdit } from "./provinces/ProvinceEdit";
+
+import { CityList } from "./cities/CityList";
+import { CityCreate } from "./cities/CityCreate";
+import { CityEdit } from "./cities/CityEdit";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -55,7 +59,16 @@ export const App = () => (
       icon={Map}
       recordRepresentation="name"
     />
+
+    {/* Ресурс городов */}
+    <Resource
+      name="cities"
+      list={CityList}
+      create={CityCreate}
+      edit={CityEdit}
+      options={{ label: "Cities" }}
+      icon={MapPin}
+      recordRepresentation="name"
+    />
   </Admin>
 );
-
-export default App;
