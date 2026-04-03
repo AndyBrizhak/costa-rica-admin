@@ -70,5 +70,17 @@ export const App = () => (
       icon={MapPin}
       recordRepresentation="name"
     />
+    {/* Ресурс городов */}
+    <Resource
+      name="cities"
+      list={CityList}
+      create={CityCreate}
+      edit={CityEdit}
+      options={{ label: "Cities" }}
+      icon={MapPin}
+      recordRepresentation="name"
+    />
   </Admin>
 );
+
+export default App;
