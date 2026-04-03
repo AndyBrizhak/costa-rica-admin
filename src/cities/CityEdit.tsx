@@ -8,9 +8,11 @@ import {
   minLength,
 } from "react-admin";
 import { useFormContext } from "react-hook-form";
-import { slugify } from "../utils/slugify";
+import { slugify } from "../utils/slugify"; // Тот самый путь к утилите
 
-// Создаем такой же помощник, как в Create
+/**
+ * Компонент для автоматической генерации слага при вводе имени.
+ */
 const NameWithAutoSlug = () => {
   const { setValue } = useFormContext();
 
@@ -21,8 +23,9 @@ const NameWithAutoSlug = () => {
       validate={[required(), minLength(2)]}
       fullWidth
       onChange={(e) => {
-        const newSlug = slugify(e.target.value);
-        // shouldDirty: true заставит форму понять, что данные изменились
+        const newName = e.target.value;
+        const newSlug = slugify(newName);
+        // shouldDirty: true помечает форму как измененную (кнопка Save станет активной)
         setValue("slug", newSlug, { shouldValidate: true, shouldDirty: true });
       }}
     />
@@ -32,8 +35,15 @@ const NameWithAutoSlug = () => {
 export const CityEdit = () => (
   <Edit title="Редактировать город" mutationMode="pessimistic">
     <SimpleForm>
-      <TextInput source="id" label="ID" disabled fullWidth />
+      {/* Оставляем ID только для чтения */}
+      <TextInput
+        source="id"
+        label="ID (Системный)"
+        InputProps={{ readOnly: true }}
+        fullWidth
+      />
 
+      {/* Используем наш умный компонент вместо обычного TextInput */}
       <NameWithAutoSlug />
 
       <TextInput
