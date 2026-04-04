@@ -8,10 +8,10 @@ import {
   minLength,
 } from "react-admin";
 import { useFormContext } from "react-hook-form";
-import { slugify } from "../utils/slugify"; // Тот самый путь к утилите
+import { slugify } from "../utils/slugify";
 
 /**
- * Компонент для автоматической генерации слага при вводе имени.
+ * Компонент для автоматической генерации слага при редактировании названия.
  */
 const NameWithAutoSlug = () => {
   const { setValue } = useFormContext();
@@ -25,25 +25,27 @@ const NameWithAutoSlug = () => {
       onChange={(e) => {
         const newName = e.target.value;
         const newSlug = slugify(newName);
-        // shouldDirty: true помечает форму как измененную (кнопка Save станет активной)
-        setValue("slug", newSlug, { shouldValidate: true, shouldDirty: true });
+
+        // Как и в форме создания, важно пометить поле как "грязное" (shouldDirty),
+        // чтобы React Admin понял, что данные изменились и нужно активировать кнопку Save.
+        setValue("slug", newSlug, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
       }}
     />
   );
 };
 
 export const CityEdit = () => (
+  /* mutationMode="pessimistic" гарантирует, что мы дождемся ответа от API 
+     перед тем как считать операцию успешной и закрыть форму. */
   <Edit title="Редактировать город" mutationMode="pessimistic">
     <SimpleForm>
-      {/* Оставляем ID только для чтения */}
-      <TextInput
-        source="id"
-        label="ID (Системный)"
-        InputProps={{ readOnly: true }}
-        fullWidth
-      />
+      {/* Системный ID — только для чтения */}
+      <TextInput source="id" label="ID (Системный)" disabled fullWidth />
 
-      {/* Используем наш умный компонент вместо обычного TextInput */}
+      {/* Умное поле названия с авто-слагом */}
       <NameWithAutoSlug />
 
       <TextInput
