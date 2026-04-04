@@ -4,34 +4,20 @@ import {
   TextField,
   EditButton,
   DeleteButton,
-  BulkDeleteButton,
   FilterLiveSearch,
-  type RaRecord,
 } from "react-admin";
 
 /**
- * Интерфейс, описывающий структуру данных провинции.
+ * Параметры фильтрации: используем Q для глобального поиска.
  */
-export interface ProvinceRecord extends RaRecord {
-  id: string;
-  name: string;
-  slug: string;
-}
+const ProvinceFilters = [<FilterLiveSearch key="q" source="Q" alwaysOn />];
 
 /**
- * Компонент фильтров для поиска через параметр Q.
- */
-const ProvinceFilters = [<FilterLiveSearch source="Q" alwaysOn />];
-
-/**
- * Компонент для массовых операций.
- */
-const ProvinceBulkActionButtons = () => (
-  <BulkDeleteButton mutationMode="pessimistic" />
-);
-
-/**
- * Список провинций без колонки ID.
+ * Список провинций.
+ * Реализован "Золотой стандарт":
+ * 1. Отключены массовые операции (bulkActionButtons={false}).
+ * 2. Поиск через параметр Q.
+ * 3. Пессимистичное удаление для стабильности.
  */
 export const ProvinceList = () => (
   <List
@@ -39,12 +25,13 @@ export const ProvinceList = () => (
     sort={{ field: "name", order: "ASC" }}
     exporter={false}
   >
-    <Datagrid rowClick="edit" bulkActionButtons={<ProvinceBulkActionButtons />}>
-      {/* Колонку с ID убрали, оставив только значимые данные */}
+    <Datagrid rowClick="edit" bulkActionButtons={false}>
       <TextField source="name" label="Название" />
       <TextField source="slug" label="Слаг (SEO)" />
 
       <EditButton />
+      {/* mutationMode="pessimistic" гарантирует, что удаление произойдет 
+          только после успешного ответа от сервера (где стоит наша проверка FK) */}
       <DeleteButton mutationMode="pessimistic" />
     </Datagrid>
   </List>
