@@ -4,20 +4,22 @@ import {
   TextField,
   EditButton,
   DeleteButton,
-  FilterLiveSearch,
+  SearchInput,
 } from "react-admin";
 
 /**
- * Параметры фильтрации: используем Q для глобального поиска.
+ * Фильтры для списка.
+ * SearchInput — правильный выбор для верхней панели (не создает вложенных <form>).
  */
-const ProvinceFilters = [<FilterLiveSearch key="q" source="Q" alwaysOn />];
+const ProvinceFilters = [
+  <SearchInput key="q" source="Q" alwaysOn placeholder="Поиск..." />,
+];
 
 /**
  * Список провинций.
- * Реализован "Золотой стандарт":
- * 1. Отключены массовые операции (bulkActionButtons={false}).
- * 2. Поиск через параметр Q.
- * 3. Пессимистичное удаление для стабильности.
+ * 1. Исправлена ошибка вложенных форм (белый экран).
+ * 2. Отключены массовые операции для безопасности.
+ * 3. Убраны неиспользуемые импорты типов для устранения предупреждений linter/TS.
  */
 export const ProvinceList = () => (
   <List
@@ -30,8 +32,7 @@ export const ProvinceList = () => (
       <TextField source="slug" label="Слаг (SEO)" />
 
       <EditButton />
-      {/* mutationMode="pessimistic" гарантирует, что удаление произойдет 
-          только после успешного ответа от сервера (где стоит наша проверка FK) */}
+      {/* mutationMode="pessimistic" обязателен для корректной обработки ошибок FK с бэкенда */}
       <DeleteButton mutationMode="pessimistic" />
     </Datagrid>
   </List>
