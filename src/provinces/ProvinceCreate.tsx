@@ -7,13 +7,15 @@ import {
 } from "react-admin";
 import { useFormContext } from "react-hook-form";
 import { slugify } from "../utils/slugify";
+// Исправленный импорт типа для соответствия verbatimModuleSyntax
+import type { ProvinceUpsertDto } from "./types";
 
 /**
- * Вспомогательный компонент для синхронизации имени и слага.
- * Использует useFormContext из react-hook-form, который доступен внутри SimpleForm.
+ * Компонент для автоматической генерации слага при вводе имени.
+ * shouldDirty: true критически важен для корректной работы кнопки Save.
  */
 const NameWithAutoSlug = () => {
-  const { setValue } = useFormContext();
+  const { setValue } = useFormContext<ProvinceUpsertDto>();
 
   return (
     <TextInput
@@ -22,19 +24,19 @@ const NameWithAutoSlug = () => {
       validate={[required(), minLength(3)]}
       fullWidth
       onChange={(e) => {
-        // Автоматически генерируем и подставляем слаг при изменении имени
         const newSlug = slugify(e.target.value);
-        setValue("slug", newSlug, { shouldValidate: true });
+        // shouldDirty: true помечает форму как измененную
+        setValue("slug", newSlug, { shouldValidate: true, shouldDirty: true });
       }}
     />
   );
 };
 
 /**
- * Компонент создания новой провинции.
+ * Форма создания провинции.
  */
 export const ProvinceCreate = () => (
-  <Create>
+  <Create title="Добавить новую провинцию">
     <SimpleForm>
       <NameWithAutoSlug />
       <TextInput
@@ -42,7 +44,7 @@ export const ProvinceCreate = () => (
         label="Слаг (SEO)"
         validate={required()}
         fullWidth
-        helperText="Генерируется автоматически из названия, можно поправить вручную"
+        helperText="Генерируется автоматически, можно править вручную"
       />
     </SimpleForm>
   </Create>
