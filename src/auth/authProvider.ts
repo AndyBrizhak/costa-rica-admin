@@ -16,12 +16,16 @@ export const authProvider: AuthProvider = {
 
       // Данные (token и roles) теперь берем из поля json
       localStorage.setItem(TOKEN_KEY, json.token);
-      localStorage.setItem(`${TOKEN_KEY}_roles`, JSON.stringify(json.roles || []));
+      localStorage.setItem(
+        `${TOKEN_KEY}_roles`,
+        JSON.stringify(json.roles || []),
+      );
 
       return Promise.resolve();
     } catch (error: unknown) {
       // Извлекаем сообщение об ошибке из объекта, если оно там есть
-      const message = error instanceof Error ? error.message : "Authentication failed";
+      const message =
+        error instanceof Error ? error.message : "Authentication failed";
       throw new Error(message);
     }
   },
@@ -35,17 +39,20 @@ export const authProvider: AuthProvider = {
 
   // Проверка: есть ли у нас токен
   checkAuth: () => {
-    return localStorage.getItem(TOKEN_KEY) ? Promise.resolve() : Promise.reject();
+    return localStorage.getItem(TOKEN_KEY)
+      ? Promise.resolve()
+      : Promise.reject();
   },
 
-  // Если API вернуло 401 или 403 — разлогиниваем пользователя
+  // Исправлено: разлогиниваем только при 401. При 403 просто остаемся в системе.
   checkError: (error) => {
     const status = error.status;
-    if (status === 401 || status === 403) {
+    if (status === 401) {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(`${TOKEN_KEY}_roles`);
       return Promise.reject();
     }
+    // Для 403 и других ошибок не делаем редирект на логин
     return Promise.resolve();
   },
 

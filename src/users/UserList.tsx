@@ -3,50 +3,74 @@ import {
   Datagrid,
   TextField,
   EmailField,
+  SearchInput,
+  SelectArrayInput,
   DeleteButton,
-  BulkDeleteButton,
   FunctionField,
-  type RaRecord, // <-- Добавляем префикс 'type' прямо здесь
+  WrapperField,
 } from "react-admin";
 import { Chip } from "@mui/material";
+import type { UserRecord } from "./types";
 
 /**
- * Интерфейс, описывающий структуру данных пользователя.
+ * Filter configuration for the User List.
+ * q: Global search (Email/Username)
+ * roles: Multi-select filter to find users with specific roles
  */
-interface UserRecord extends RaRecord {
-  userName: string;
-  email: string;
-  roles: string[];
-}
-
-const UserBulkActionButtons = () => (
-  <BulkDeleteButton mutationMode="pessimistic" />
-);
+const UserFilters = [
+  <SearchInput
+    key="q"
+    source="q"
+    alwaysOn
+    placeholder="Search by email or name..."
+  />,
+  <SelectArrayInput
+    key="roles"
+    source="roles"
+    label="Filter by Roles"
+    choices={[
+      { id: "SuperAdmin", name: "SuperAdmin" },
+      { id: "Admin", name: "Admin" },
+      { id: "Manager", name: "Manager" },
+      { id: "Viewer", name: "Viewer" },
+    ]}
+  />,
+];
 
 export const UserList = () => (
-  <List>
-    <Datagrid rowClick="edit" bulkActionButtons={<UserBulkActionButtons />}>
+  <List
+    filters={UserFilters}
+    sort={{ field: "email", order: "ASC" }}
+    exporter={false}
+  >
+    <Datagrid rowClick="edit" bulkActionButtons={false}>
       <TextField source="userName" label="Username" />
       <EmailField source="email" label="Email Address" />
 
-      <FunctionField<UserRecord>
-        label="Roles"
-        render={(record) => (
-          <>
-            {record?.roles?.map((role) => (
+      {/* Displaying a single role. 
+          sortBy="role" matches the backend implementation in AdminUserService.
+      */}
+      <WrapperField label="Role" sortBy="role">
+        <FunctionField<UserRecord>
+          render={(record) =>
+            record?.role ? (
               <Chip
-                key={role}
-                label={role}
+                label={record.role}
                 size="small"
                 variant="outlined"
-                style={{ marginRight: 4 }}
+                color={record.role === "SuperAdmin" ? "secondary" : "default"}
               />
-            ))}
-          </>
-        )}
-      />
+            ) : null
+          }
+        />
+      </WrapperField>
 
-      <DeleteButton mutationMode="pessimistic" />
+      <DeleteButton
+        label="Delete"
+        mutationMode="pessimistic"
+        confirmTitle="Delete User"
+        confirmContent="Are you sure you want to permanently remove this user?"
+      />
     </Datagrid>
   </List>
 );
