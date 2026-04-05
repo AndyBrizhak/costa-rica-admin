@@ -3,19 +3,19 @@ import {
   Datagrid,
   TextField,
   EmailField,
-  FunctionField,
   SearchInput,
   SelectArrayInput,
   DeleteButton,
+  FunctionField,
+  WrapperField,
 } from "react-admin";
-import { Chip, Box } from "@mui/material";
-// Исправляем здесь: добавляем ключевое слово 'type'
+import { Chip } from "@mui/material";
 import type { UserRecord } from "./types";
 
 /**
  * Filter configuration for the User List.
  * q: Global search (Email/Username)
- * roles: Multi-select filter for security roles
+ * roles: Multi-select filter to find users with specific roles
  */
 const UserFilters = [
   <SearchInput
@@ -27,7 +27,7 @@ const UserFilters = [
   <SelectArrayInput
     key="roles"
     source="roles"
-    label="Roles"
+    label="Filter by Roles"
     choices={[
       { id: "SuperAdmin", name: "SuperAdmin" },
       { id: "Admin", name: "Admin" },
@@ -47,23 +47,23 @@ export const UserList = () => (
       <TextField source="userName" label="Username" />
       <EmailField source="email" label="Email Address" />
 
-      <FunctionField<UserRecord>
-        label="Roles"
-        sortBy="roles"
-        render={(record) => (
-          <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-            {record?.roles?.map((role) => (
+      {/* Displaying a single role. 
+          sortBy="role" matches the backend implementation in AdminUserService.
+      */}
+      <WrapperField label="Role" sortBy="role">
+        <FunctionField<UserRecord>
+          render={(record) =>
+            record?.role ? (
               <Chip
-                key={role}
-                label={role}
+                label={record.role}
                 size="small"
                 variant="outlined"
-                color={role === "SuperAdmin" ? "secondary" : "default"}
+                color={record.role === "SuperAdmin" ? "secondary" : "default"}
               />
-            ))}
-          </Box>
-        )}
-      />
+            ) : null
+          }
+        />
+      </WrapperField>
 
       <DeleteButton
         label="Delete"
