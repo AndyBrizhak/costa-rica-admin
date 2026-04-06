@@ -21,6 +21,7 @@ import { CityCreate } from "./cities/CityCreate";
 import { CityEdit } from "./cities/CityEdit";
 
 import { TagGroupList } from "./tag-groups/TagGroupList";
+import { TagGroupCreate } from "./tag-groups/TagGroupCreate";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -76,6 +77,7 @@ const App = () => (
     <Resource
       name="tag-groups"
       list={TagGroupList}
+      create={TagGroupCreate}
       options={{ label: "Tag Groups" }}
       icon={Tags}
       recordRepresentation="nameEn"
