@@ -1,21 +1,40 @@
 import { Create, SimpleForm, TextInput, required } from "react-admin";
+import { useFormContext } from "react-hook-form";
+import { slugify } from "../utils/slugify";
 
 /**
- * Компонент создания группы тегов.
- * Все поля обязательны для заполнения.
+ * Умный компонент для поля 'nameEn'.
+ * Автоматически генерирует и устанавливает 'slug' при вводе.
  */
-export const TagGroupCreate = () => (
-  <Create title="Добавить группу тегов">
-    <SimpleForm>
-      {/* Название на английском */}
-      <TextInput
-        source="nameEn"
-        label="Название (EN)"
-        validate={[required()]}
-        fullWidth
-      />
+const NameEnWithAutoSlug = () => {
+  const { setValue } = useFormContext();
 
-      {/* Название на испанском */}
+  return (
+    <TextInput
+      source="nameEn"
+      label="Название (EN)"
+      validate={[required()]}
+      fullWidth
+      onChange={(e) => {
+        const newName = e.target.value;
+        const newSlug = slugify(newName);
+
+        // Установка значения слага с флагами для корректной работы валидации и кнопки Save
+        setValue("slug", newSlug, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+      }}
+    />
+  );
+};
+
+export const TagGroupCreate = () => (
+  <Create title="Добавить группу тегов" mutationMode="pessimistic">
+    <SimpleForm>
+      {/* Поле с авто-генерацией слага */}
+      <NameEnWithAutoSlug />
+
       <TextInput
         source="nameEs"
         label="Название (ES)"
@@ -23,13 +42,12 @@ export const TagGroupCreate = () => (
         fullWidth
       />
 
-      {/* Уникальный слаг для URL */}
       <TextInput
         source="slug"
         label="Слаг (SEO)"
         validate={[required()]}
         fullWidth
-        helperText="Используйте маленькие буквы и дефисы (например, basic-amenities)"
+        helperText="Генерируется автоматически из названия (EN)"
       />
     </SimpleForm>
   </Create>
