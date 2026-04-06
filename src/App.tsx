@@ -1,7 +1,8 @@
 import { Admin, Resource, CustomRoutes } from "react-admin";
 import { Route } from "react-router-dom";
 import simpleRestProvider from "ra-data-simple-rest";
-import { Map, Users, MapPin } from "lucide-react";
+// Импортируем Tags для групп тегов
+import { Map, Users, MapPin, Tags } from "lucide-react";
 
 import { authProvider } from "./auth/authProvider";
 import { httpClient } from "./auth/httpClient";
@@ -19,16 +20,19 @@ import { CityList } from "./cities/CityList";
 import { CityCreate } from "./cities/CityCreate";
 import { CityEdit } from "./cities/CityEdit";
 
+// Подключаем компоненты модуля Групп Тегов
+import { TagGroupList } from "./tag-groups/TagGroupList";
+import { TagGroupCreate } from "./tag-groups/TagGroupCreate";
+import { TagGroupEdit } from "./tag-groups/TagGroupEdit";
+
 const apiUrl = import.meta.env.VITE_API_URL;
 
 /**
- * Инициализация dataProvider.
- * Добавляем третий аргумент 'X-Total-Count', чтобы simpleRestProvider
- * знал, какой заголовок использовать для пагинации.
+ * Инициализация dataProvider с поддержкой заголовка пагинации.
  */
 const dataProvider = simpleRestProvider(apiUrl, httpClient, "X-Total-Count");
 
-export const App = () => (
+const App = () => (
   <Admin
     authProvider={authProvider}
     dataProvider={dataProvider}
@@ -70,15 +74,16 @@ export const App = () => (
       icon={MapPin}
       recordRepresentation="name"
     />
-    {/* Ресурс городов */}
+
+    {/* Ресурс Групп Тегов — теперь с поддержкой создания и редактирования */}
     <Resource
-      name="cities"
-      list={CityList}
-      create={CityCreate}
-      edit={CityEdit}
-      options={{ label: "Cities" }}
-      icon={MapPin}
-      recordRepresentation="name"
+      name="tag-groups"
+      list={TagGroupList}
+      create={TagGroupCreate}
+      edit={TagGroupEdit}
+      options={{ label: "Tag Groups" }}
+      icon={Tags}
+      recordRepresentation="nameEn"
     />
   </Admin>
 );
