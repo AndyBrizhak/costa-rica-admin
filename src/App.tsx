@@ -20,8 +20,10 @@ import { CityList } from "./cities/CityList";
 import { CityCreate } from "./cities/CityCreate";
 import { CityEdit } from "./cities/CityEdit";
 
+// Подключаем компоненты модуля Групп Тегов
 import { TagGroupList } from "./tag-groups/TagGroupList";
 import { TagGroupCreate } from "./tag-groups/TagGroupCreate";
+import { TagGroupEdit } from "./tag-groups/TagGroupEdit";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -73,11 +75,12 @@ const App = () => (
       recordRepresentation="name"
     />
 
-    {/* Ресурс Групп Тегов */}
+    {/* Ресурс Групп Тегов — теперь с поддержкой создания и редактирования */}
     <Resource
       name="tag-groups"
       list={TagGroupList}
       create={TagGroupCreate}
+      edit={TagGroupEdit}
       options={{ label: "Tag Groups" }}
       icon={Tags}
       recordRepresentation="nameEn"
