@@ -5,18 +5,17 @@ import {
   SearchInput,
   TopToolbar,
   CreateButton,
+  EditButton,
+  DeleteButton,
 } from "react-admin";
 
 /**
  * Фильтры для списка групп тегов.
- * SearchInput с параметром alwaysOn отображается постоянно.
  */
 const TagGroupFilters = [<SearchInput key="q" source="q" alwaysOn />];
 
 /**
  * Кастомная панель действий для списка.
- * Мы заменяем стандартную панель, исключая кнопку добавления фильтров
- * и оставляя только кнопку создания новой записи.
  */
 const TagGroupActions = () => (
   <TopToolbar>
@@ -36,6 +35,10 @@ export const TagGroupList = () => (
       <TextField source="nameEn" label="Название (EN)" />
       <TextField source="nameEs" label="Название (ES)" />
       <TextField source="slug" label="Слаг (SEO)" />
+
+      {/* Кнопки управления по аналогии с городами */}
+      <EditButton />
+      <DeleteButton mutationMode="pessimistic" />
     </Datagrid>
   </List>
 );
