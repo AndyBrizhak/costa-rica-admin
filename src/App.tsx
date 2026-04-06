@@ -1,7 +1,8 @@
 import { Admin, Resource, CustomRoutes } from "react-admin";
 import { Route } from "react-router-dom";
 import simpleRestProvider from "ra-data-simple-rest";
-import { Map, Users, MapPin } from "lucide-react";
+// Используем Tag (вместо Tags) для совместимости с вашей версией lucide-react
+import { Map, Users, MapPin, Tag } from "lucide-react";
 
 import { authProvider } from "./auth/authProvider";
 import { httpClient } from "./auth/httpClient";
@@ -19,16 +20,17 @@ import { CityList } from "./cities/CityList";
 import { CityCreate } from "./cities/CityCreate";
 import { CityEdit } from "./cities/CityEdit";
 
+// Импортируем упрощенный список групп тегов
+import { TagGroupList } from "./tag-groups/TagGroupList";
+
 const apiUrl = import.meta.env.VITE_API_URL;
 
 /**
  * Инициализация dataProvider.
- * Добавляем третий аргумент 'X-Total-Count', чтобы simpleRestProvider
- * знал, какой заголовок использовать для пагинации.
  */
 const dataProvider = simpleRestProvider(apiUrl, httpClient, "X-Total-Count");
 
-export const App = () => (
+const App = () => (
   <Admin
     authProvider={authProvider}
     dataProvider={dataProvider}
@@ -39,7 +41,7 @@ export const App = () => (
       <Route path="/register" element={<RegistrationPage />} />
     </CustomRoutes>
 
-    {/* Ресурс пользователей */}
+    {/* Пользователи */}
     <Resource
       name="admin/users"
       list={UserList}
@@ -49,7 +51,7 @@ export const App = () => (
       recordRepresentation="userName"
     />
 
-    {/* Ресурс провинций */}
+    {/* Провинции */}
     <Resource
       name="provinces"
       list={ProvinceList}
@@ -60,7 +62,7 @@ export const App = () => (
       recordRepresentation="name"
     />
 
-    {/* Ресурс городов */}
+    {/* Города */}
     <Resource
       name="cities"
       list={CityList}
@@ -70,17 +72,17 @@ export const App = () => (
       icon={MapPin}
       recordRepresentation="name"
     />
-    {/* Ресурс городов */}
+
+    {/* Группы тегов */}
     <Resource
-      name="cities"
-      list={CityList}
-      create={CityCreate}
-      edit={CityEdit}
-      options={{ label: "Cities" }}
-      icon={MapPin}
-      recordRepresentation="name"
+      name="tag-groups"
+      list={TagGroupList}
+      options={{ label: "Tag Groups" }}
+      icon={Tag}
+      recordRepresentation="nameEn"
     />
   </Admin>
 );
 
+// ДОБАВЛЯЕМ DEFAULT EXPORT, чтобы main.tsx не ругался
 export default App;

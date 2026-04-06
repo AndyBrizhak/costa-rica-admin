@@ -1,41 +1,27 @@
-import {
-  List,
-  Datagrid,
-  TextField,
-  EditButton,
-  DeleteButton,
-  SearchInput,
-} from "react-admin";
+import { List, Datagrid, TextField, SearchInput } from "react-admin";
 
 /**
  * Фильтры для списка групп тегов.
- * SearchInput настроен на поле "q", которое наш бэкенд
- * умеет парсить и превращать в глобальный ILike поиск.
+ * Используем SearchInput для связи с параметром "q" на бэкенде.
  */
 const TagGroupFilters = [<SearchInput key="q" source="q" alwaysOn />];
 
 export const TagGroupList = () => (
   <List
     filters={TagGroupFilters}
-    exporter={false} // Отключаем экспорт для чистоты интерфейса
-    sort={{ field: "nameEn", order: "ASC" }} // Сортировка по умолчанию
+    exporter={false}
+    sort={{ field: "nameEn", order: "ASC" }}
     title="Группы тегов"
   >
-    {/* bulkActionButtons={false} — убираем чекбоксы слева. 
-        Это делает интерфейс аккуратнее и защищает от случайного удаления пачки групп.
+    {/* КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: 
+        Удален rowClick="edit" и кнопки EditButton/DeleteButton.
+        Пока в App.tsx не зарегистрированы компоненты create и edit, 
+        любая попытка сослаться на них приведет к белому экрану.
     */}
-    <Datagrid rowClick="edit" bulkActionButtons={false}>
+    <Datagrid bulkActionButtons={false}>
       <TextField source="nameEn" label="Название (EN)" />
       <TextField source="nameEs" label="Название (ES)" />
       <TextField source="slug" label="Слаг (SEO)" />
-
-      {/* Кнопки управления */}
-      <EditButton />
-      <DeleteButton
-        mutationMode="pessimistic"
-        confirmTitle="Удаление группы"
-        confirmContent="Вы уверены? Если в группе есть теги, сервер вернет ошибку."
-      />
     </Datagrid>
   </List>
 );
