@@ -1,8 +1,8 @@
 import { Admin, Resource, CustomRoutes } from "react-admin";
 import { Route } from "react-router-dom";
 import simpleRestProvider from "ra-data-simple-rest";
-// Используем Tag (вместо Tags) для совместимости с вашей версией lucide-react
-import { Map, Users, MapPin, Tag } from "lucide-react";
+// Импортируем Tags для групп тегов
+import { Map, Users, MapPin, Tags } from "lucide-react";
 
 import { authProvider } from "./auth/authProvider";
 import { httpClient } from "./auth/httpClient";
@@ -20,13 +20,12 @@ import { CityList } from "./cities/CityList";
 import { CityCreate } from "./cities/CityCreate";
 import { CityEdit } from "./cities/CityEdit";
 
-// Импортируем упрощенный список групп тегов
 import { TagGroupList } from "./tag-groups/TagGroupList";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 /**
- * Инициализация dataProvider.
+ * Инициализация dataProvider с поддержкой заголовка пагинации.
  */
 const dataProvider = simpleRestProvider(apiUrl, httpClient, "X-Total-Count");
 
@@ -41,7 +40,7 @@ const App = () => (
       <Route path="/register" element={<RegistrationPage />} />
     </CustomRoutes>
 
-    {/* Пользователи */}
+    {/* Ресурс пользователей */}
     <Resource
       name="admin/users"
       list={UserList}
@@ -51,7 +50,7 @@ const App = () => (
       recordRepresentation="userName"
     />
 
-    {/* Провинции */}
+    {/* Ресурс провинций */}
     <Resource
       name="provinces"
       list={ProvinceList}
@@ -62,7 +61,7 @@ const App = () => (
       recordRepresentation="name"
     />
 
-    {/* Города */}
+    {/* Ресурс городов */}
     <Resource
       name="cities"
       list={CityList}
@@ -73,16 +72,15 @@ const App = () => (
       recordRepresentation="name"
     />
 
-    {/* Группы тегов */}
+    {/* Ресурс Групп Тегов */}
     <Resource
       name="tag-groups"
       list={TagGroupList}
       options={{ label: "Tag Groups" }}
-      icon={Tag}
+      icon={Tags}
       recordRepresentation="nameEn"
     />
   </Admin>
 );
 
-// ДОБАВЛЯЕМ DEFAULT EXPORT, чтобы main.tsx не ругался
 export default App;
