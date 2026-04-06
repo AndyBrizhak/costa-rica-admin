@@ -1,23 +1,37 @@
-import { List, Datagrid, TextField, SearchInput } from "react-admin";
+import {
+  List,
+  Datagrid,
+  TextField,
+  SearchInput,
+  TopToolbar,
+  CreateButton,
+} from "react-admin";
 
 /**
  * Фильтры для списка групп тегов.
- * Используем SearchInput для связи с параметром "q" на бэкенде.
+ * SearchInput с параметром alwaysOn отображается постоянно.
  */
 const TagGroupFilters = [<SearchInput key="q" source="q" alwaysOn />];
+
+/**
+ * Кастомная панель действий для списка.
+ * Мы заменяем стандартную панель, исключая кнопку добавления фильтров
+ * и оставляя только кнопку создания новой записи.
+ */
+const TagGroupActions = () => (
+  <TopToolbar>
+    <CreateButton />
+  </TopToolbar>
+);
 
 export const TagGroupList = () => (
   <List
     filters={TagGroupFilters}
+    actions={<TagGroupActions />}
     exporter={false}
     sort={{ field: "nameEn", order: "ASC" }}
     title="Группы тегов"
   >
-    {/* КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: 
-        Удален rowClick="edit" и кнопки EditButton/DeleteButton.
-        Пока в App.tsx не зарегистрированы компоненты create и edit, 
-        любая попытка сослаться на них приведет к белому экрану.
-    */}
     <Datagrid bulkActionButtons={false}>
       <TextField source="nameEn" label="Название (EN)" />
       <TextField source="nameEs" label="Название (ES)" />
