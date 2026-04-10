@@ -2,7 +2,7 @@ import { fetchUtils } from "react-admin";
 
 /**
  * Универсальный HTTP-клиент.
- * Исправлена проблема отсутствия Content-Type, вызывавшая 400 ошибку.
+ * Настроен перехват кастомных ошибок (напр. 409 Conflict) от бэкенда.
  */
 export const httpClient = (url: string, options: fetchUtils.Options = {}) => {
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -30,6 +30,18 @@ export const httpClient = (url: string, options: fetchUtils.Options = {}) => {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  // Выполняем запрос через утилиту react-admin
-  return fetchUtils.fetchJson(finalUrl, { ...options, headers });
+  // Выполняем запрос через утилиту react-admin и перехватываем результат
+  return fetchUtils
+    .fetchJson(finalUrl, { ...options, headers })
+    .catch((err) => {
+      // Если произошла ошибка (например, 409), React Admin генерирует объект HttpError.
+      // Наш бэкенд передает причину в поле { "error": "..." }.
+      // Подменяем стандартное системное сообщение (err.message) на наш полезный текст.
+      if (err.body && err.body.error) {
+        err.message = err.body.error;
+      }
+
+      // Обязательно пробрасываем ошибку дальше, чтобы сработал Snackbar (красная плашка)
+      throw err;
+    });
 };
