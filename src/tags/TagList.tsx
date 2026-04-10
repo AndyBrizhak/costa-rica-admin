@@ -10,11 +10,11 @@ import {
   CreateButton,
   EditButton,
   DeleteButton,
+  FilterButton,
 } from "react-admin";
 
 /**
  * Filters for the Tag list.
- * Includes global search and filtering by Tag Group.
  */
 const TagFilters = [
   <SearchInput
@@ -23,8 +23,13 @@ const TagFilters = [
     alwaysOn
     placeholder="Search by name or slug..."
   />,
-  <ReferenceInput key="tagGroupId" source="tagGroupId" reference="tag-groups">
-    <SelectInput label="Filter by Group" optionText="nameEn" />
+  <ReferenceInput
+    key="tagGroupId"
+    source="tagGroupId"
+    reference="tag-groups"
+    alwaysOn // Теперь фильтр по группе будет виден всегда
+  >
+    <SelectInput label="Group" optionText="nameEn" />
   </ReferenceInput>,
 ];
 
@@ -33,6 +38,7 @@ const TagFilters = [
  */
 const TagActions = () => (
   <TopToolbar>
+    <FilterButton /> {/* Добавляем кнопку управления фильтрами */}
     <CreateButton label="Add Tag" />
   </TopToolbar>
 );
@@ -50,9 +56,6 @@ export const TagList = () => (
       <TextField source="nameEs" label="Name (ES)" />
       <TextField source="slug" label="Slug (SEO)" />
 
-      {/* ReferenceField links the tag to its group. 
-          It fetches data from the 'tag-groups' resource using 'tagGroupId'.
-      */}
       <ReferenceField
         source="tagGroupId"
         reference="tag-groups"
