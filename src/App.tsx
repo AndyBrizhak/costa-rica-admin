@@ -1,8 +1,7 @@
 import { Admin, Resource, CustomRoutes } from "react-admin";
 import { Route } from "react-router-dom";
 import simpleRestProvider from "ra-data-simple-rest";
-// Импортируем Tags для групп тегов
-import { Map, Users, MapPin, Tags } from "lucide-react";
+import { Map, Users, MapPin, Tags, Tag } from "lucide-react";
 
 import { authProvider } from "./auth/authProvider";
 import { httpClient } from "./auth/httpClient";
@@ -20,10 +19,14 @@ import { CityList } from "./cities/CityList";
 import { CityCreate } from "./cities/CityCreate";
 import { CityEdit } from "./cities/CityEdit";
 
-// Подключаем компоненты модуля Групп Тегов
 import { TagGroupList } from "./tag-groups/TagGroupList";
 import { TagGroupCreate } from "./tag-groups/TagGroupCreate";
 import { TagGroupEdit } from "./tag-groups/TagGroupEdit";
+
+// Импорт компонентов нового ресурса Tags
+import { TagList } from "./tags/TagList";
+import { TagCreate } from "./tags/TagCreate";
+import { TagEdit } from "./tags/TagEdit";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -43,7 +46,7 @@ const App = () => (
       <Route path="/register" element={<RegistrationPage />} />
     </CustomRoutes>
 
-    {/* Ресурс пользователей */}
+    {/* Users Resource */}
     <Resource
       name="admin/users"
       list={UserList}
@@ -53,7 +56,7 @@ const App = () => (
       recordRepresentation="userName"
     />
 
-    {/* Ресурс провинций */}
+    {/* Provinces Resource */}
     <Resource
       name="provinces"
       list={ProvinceList}
@@ -64,7 +67,7 @@ const App = () => (
       recordRepresentation="name"
     />
 
-    {/* Ресурс городов */}
+    {/* Cities Resource */}
     <Resource
       name="cities"
       list={CityList}
@@ -75,7 +78,7 @@ const App = () => (
       recordRepresentation="name"
     />
 
-    {/* Ресурс Групп Тегов — теперь с поддержкой создания и редактирования */}
+    {/* Tag Groups Resource */}
     <Resource
       name="tag-groups"
       list={TagGroupList}
@@ -83,6 +86,17 @@ const App = () => (
       edit={TagGroupEdit}
       options={{ label: "Tag Groups" }}
       icon={Tags}
+      recordRepresentation="nameEn"
+    />
+
+    {/* Tags Resource */}
+    <Resource
+      name="tags"
+      list={TagList}
+      create={TagCreate}
+      edit={TagEdit}
+      options={{ label: "Tags" }}
+      icon={Tag}
       recordRepresentation="nameEn"
     />
   </Admin>
