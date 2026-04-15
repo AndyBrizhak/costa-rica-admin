@@ -2,6 +2,7 @@ import { Admin, Resource, CustomRoutes } from "react-admin";
 import { Route } from "react-router-dom";
 import simpleRestProvider from "ra-data-simple-rest";
 import { Map, Users, MapPin, Tags, Tag } from "lucide-react";
+import { BookOpen } from "lucide-react"; // Иконка для категорий
 
 import { authProvider } from "./auth/authProvider";
 import { httpClient } from "./auth/httpClient";
@@ -27,6 +28,12 @@ import { TagGroupEdit } from "./tag-groups/TagGroupEdit";
 import { TagList } from "./tags/TagList";
 import { TagCreate } from "./tags/TagCreate";
 import { TagEdit } from "./tags/TagEdit";
+
+// Импорт компонентов Google Categories
+import { GoogleCategoryList } from "./google-categories/GoogleCategoryList";
+import { GoogleCategoryCreate } from "./google-categories/GoogleCategoryCreate";
+
+import { GoogleCategoryShow } from "./google-categories/GoogleCategoryShow";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -97,6 +104,15 @@ const App = () => (
       edit={TagEdit}
       options={{ label: "Tags" }}
       icon={Tag}
+      recordRepresentation="nameEn"
+    />
+    <Resource
+      name="google-categories"
+      list={GoogleCategoryList}
+      create={GoogleCategoryCreate}
+      show={GoogleCategoryShow}
+      options={{ label: "Google Categories" }}
+      icon={BookOpen}
       recordRepresentation="nameEn"
     />
   </Admin>
