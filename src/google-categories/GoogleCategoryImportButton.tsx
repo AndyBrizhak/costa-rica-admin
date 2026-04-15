@@ -31,13 +31,10 @@ export const GoogleCategoryImportButton = () => {
         const content = e.target?.result as string;
         const json = JSON.parse(content);
 
-        const response = await httpClient(
-          `${apiUrl}/api/google-categories/bulk`,
-          {
-            method: "POST",
-            body: JSON.stringify(json),
-          },
-        );
+        const response = await httpClient(`${apiUrl}/google-categories/bulk`, {
+          method: "POST",
+          body: JSON.stringify(json),
+        });
 
         const result = response.json as BulkImportResponseDto;
 
