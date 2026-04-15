@@ -10,28 +10,14 @@ import {
 } from "react-admin";
 import { GoogleCategoryImportButton } from "./GoogleCategoryImportButton";
 
-/**
- * Панель действий над списком.
- */
 const GoogleCategoryListActions = () => (
   <TopToolbar>
     <GoogleCategoryImportButton />
-    <CreateButton label="Add Category" />
+    <CreateButton />
   </TopToolbar>
 );
 
-/**
- * Фильтр глобального поиска.
- * Используем source="q", который мапится на Q в бэкенде.
- */
-const GoogleCategoryFilters = [
-  <SearchInput
-    key="q"
-    source="q"
-    alwaysOn
-    placeholder="Search by name or GCID..."
-  />,
-];
+const GoogleCategoryFilters = [<SearchInput key="q" source="q" alwaysOn />];
 
 export const GoogleCategoryList = () => (
   <List
@@ -41,15 +27,16 @@ export const GoogleCategoryList = () => (
     sort={{ field: "nameEn", order: "ASC" }}
     title="Google Categories"
   >
+    {/* Теперь клик по строке открывает страницу просмотра */}
     <Datagrid rowClick="show" bulkActionButtons={false}>
-      {/* Эти source теперь обрабатываются регистронезависимо в GoogleCategoryService */}
       <TextField source="gcid" label="GCID" />
       <TextField source="nameEn" label="Name (EN)" />
       <TextField source="nameEs" label="Name (ES)" />
 
-      {/* Кнопки действий без лишних оберток */}
-      <ShowButton />
-      <DeleteButton mutationMode="pessimistic" />
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+        <ShowButton />
+        <DeleteButton mutationMode="pessimistic" />
+      </div>
     </Datagrid>
   </List>
 );
