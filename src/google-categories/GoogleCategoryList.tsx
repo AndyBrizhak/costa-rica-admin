@@ -4,16 +4,12 @@ import {
   TextField,
   SearchInput,
   DeleteButton,
-  EditButton,
+  ShowButton,
   TopToolbar,
   CreateButton,
 } from "react-admin";
 import { GoogleCategoryImportButton } from "./GoogleCategoryImportButton";
 
-/**
- * Панель действий для списка категорий.
- * Содержит кнопку создания новой записи и кнопку импорта JSON.
- */
 const GoogleCategoryListActions = () => (
   <TopToolbar>
     <GoogleCategoryImportButton />
@@ -21,9 +17,6 @@ const GoogleCategoryListActions = () => (
   </TopToolbar>
 );
 
-/**
- * Фильтры для поиска категорий Google.
- */
 const GoogleCategoryFilters = [<SearchInput key="q" source="q" alwaysOn />];
 
 export const GoogleCategoryList = () => (
@@ -34,13 +27,14 @@ export const GoogleCategoryList = () => (
     sort={{ field: "nameEn", order: "ASC" }}
     title="Google Categories"
   >
-    <Datagrid rowClick="edit" bulkActionButtons={false}>
+    {/* Теперь клик по строке открывает страницу просмотра */}
+    <Datagrid rowClick="show" bulkActionButtons={false}>
       <TextField source="gcid" label="GCID" />
       <TextField source="nameEn" label="Name (EN)" />
       <TextField source="nameEs" label="Name (ES)" />
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-        <EditButton />
+        <ShowButton />
         <DeleteButton mutationMode="pessimistic" />
       </div>
     </Datagrid>

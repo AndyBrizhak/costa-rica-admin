@@ -32,7 +32,8 @@ import { TagEdit } from "./tags/TagEdit";
 // Импорт компонентов Google Categories
 import { GoogleCategoryList } from "./google-categories/GoogleCategoryList";
 import { GoogleCategoryCreate } from "./google-categories/GoogleCategoryCreate";
-import { GoogleCategoryEdit } from "./google-categories/GoogleCategoryEdit";
+
+import { GoogleCategoryShow } from "./google-categories/GoogleCategoryShow";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -109,7 +110,7 @@ const App = () => (
       name="google-categories"
       list={GoogleCategoryList}
       create={GoogleCategoryCreate}
-      edit={GoogleCategoryEdit}
+      show={GoogleCategoryShow}
       options={{ label: "Google Categories" }}
       icon={BookOpen}
       recordRepresentation="nameEn"
