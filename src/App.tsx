@@ -2,6 +2,8 @@ import { Admin, Resource, CustomRoutes } from "react-admin";
 import { Route } from "react-router-dom";
 import simpleRestProvider from "ra-data-simple-rest";
 import { Map, Users, MapPin, Tags, Tag, Image, BookOpen } from "lucide-react";
+import type { CreateParams, RaRecord } from "react-admin";
+import type { MediaUploadDto } from "./media/mediaTypes";
 
 import { authProvider } from "./auth/authProvider";
 import { httpClient } from "./auth/httpClient";
@@ -49,31 +51,32 @@ const baseDataProvider = simpleRestProvider(
 
 /**
  * Расширенный dataProvider для поддержки загрузки файлов через FormData.
- * Тип params объявлен безопасно, чтобы не ломать сборку Vite.
+ * Использует типы RaRecord и MediaUploadDto для исключения ошибки no-explicit-any.
  */
 const dataProvider = {
   ...baseDataProvider,
-  create: (resource: string, params: { data: any }) => {
+  create: (resource: string, params: CreateParams<RaRecord>) => {
     // Если это не медиа или нет файла, используем стандартную логику (JSON)
     if (resource !== "media" || !params.data.file) {
       return baseDataProvider.create(resource, params);
     }
 
-    // Создаем FormData для передачи бинарных данных
+    // Приведение к MediaUploadDto только для логики загрузки медиа
+    const data = params.data as unknown as MediaUploadDto;
     const formData = new FormData();
 
     // React Admin ImageInput хранит объект файла в свойстве rawFile
-    if (params.data.file && params.data.file.rawFile) {
-      formData.append("file", params.data.file.rawFile);
+    if (data.file && data.file.rawFile) {
+      formData.append("file", data.file.rawFile);
     }
 
-    formData.append("slug", params.data.slug);
+    formData.append("slug", data.slug);
 
-    if (params.data.altTextEn) {
-      formData.append("altTextEn", params.data.altTextEn);
+    if (data.altTextEn) {
+      formData.append("altTextEn", data.altTextEn);
     }
-    if (params.data.altTextEs) {
-      formData.append("altTextEs", params.data.altTextEs);
+    if (data.altTextEs) {
+      formData.append("altTextEs", data.altTextEs);
     }
 
     // Отправляем запрос через httpClient напрямую
@@ -81,9 +84,7 @@ const dataProvider = {
       method: "POST",
       body: formData,
     }).then(({ json }) => ({
-      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Возвращаем только чистый ответ от бэкенда.
-      // Не используем ...params.data, так как он содержит сырой файл,
-      // который ломает кэш React Admin и вызывает Type Mismatch.
+      // Возвращаем только чистый ответ от бэкенда
       data: json,
     }));
   },
