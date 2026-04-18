@@ -20,7 +20,14 @@ export const httpClient = (url: string, options: fetchUtils.Options = {}) => {
   }
 
   // ВАЖНО: Добавляем Content-Type для POST/PUT запросов, чтобы бэкенд видел JSON
-  if (options.body && !headers.has("Content-Type")) {
+  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если тело запроса является FormData (загрузка файлов),
+  // заголовок Content-Type устанавливать НЕЛЬЗЯ. Браузер выставит его автоматически
+  // с необходимым boundary. Принудительная установка JSON приведет к ошибке 415.
+  if (
+    options.body &&
+    !headers.has("Content-Type") &&
+    !(options.body instanceof FormData)
+  ) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -34,14 +41,12 @@ export const httpClient = (url: string, options: fetchUtils.Options = {}) => {
   return fetchUtils
     .fetchJson(finalUrl, { ...options, headers })
     .catch((err) => {
-      // Если произошла ошибка (например, 409), React Admin генерирует объект HttpError.
-      // Наш бэкенд передает причину в поле { "error": "..." }.
-      // Подменяем стандартное системное сообщение (err.message) на наш полезный текст.
+      // Перехватываем сообщения об ошибках от бэкенда
       if (err.body && err.body.error) {
         err.message = err.body.error;
       }
 
-      // Обязательно пробрасываем ошибку дальше, чтобы сработал Snackbar (красная плашка)
+      // Обязательно пробрасываем ошибку дальше для корректной работы уведомлений
       throw err;
     });
 };
