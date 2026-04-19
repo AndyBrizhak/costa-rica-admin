@@ -1,7 +1,16 @@
 import { Admin, Resource, CustomRoutes } from "react-admin";
 import { Route } from "react-router-dom";
 import simpleRestProvider from "ra-data-simple-rest";
-import { Map, Users, MapPin, Tags, Tag, Image, BookOpen } from "lucide-react";
+import {
+  Store,
+  Map,
+  Users,
+  MapPin,
+  Tags,
+  Tag,
+  Image,
+  BookOpen,
+} from "lucide-react";
 import type { CreateParams, RaRecord } from "react-admin";
 import type { MediaUploadDto } from "./media/mediaTypes";
 
@@ -39,6 +48,10 @@ import { MediaEdit } from "./media/MediaEdit";
 import { MediaCreate } from "./media/MediaCreate";
 
 const apiUrl = import.meta.env.VITE_API_URL;
+
+import { BusinessList } from "./business-pages/BusinessList";
+import { BusinessCreate } from "./business-pages/BusinessCreate";
+import { BusinessEdit } from "./business-pages/BusinessEdit";
 
 /**
  * Базовый провайдер для стандартных ресурсов
@@ -168,6 +181,15 @@ const App = () => (
       edit={MediaEdit}
       options={{ label: "Media Library" }}
       icon={Image}
+    />
+    <Resource
+      name="admin/business-pages"
+      list={BusinessList}
+      create={BusinessCreate}
+      edit={BusinessEdit}
+      options={{ label: "Business Pages" }}
+      icon={Store}
+      recordRepresentation="name"
     />
   </Admin>
 );

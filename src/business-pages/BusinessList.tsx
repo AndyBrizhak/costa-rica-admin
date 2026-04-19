@@ -16,11 +16,10 @@ import {
   CreateButton,
   ExportButton,
 } from "react-admin";
-import { Grid } from "@mui/material";
+import { Box } from "@mui/material";
 
 /**
  * Панель фильтров.
- * 'q' — регистронезависимый поиск по названию и слагу (реализовано в BusinessPageService).
  */
 const BusinessFilters = [
   <SearchInput
@@ -65,18 +64,12 @@ export const BusinessList = () => (
     filters={BusinessFilters}
     actions={<BusinessActions />}
     sort={{ field: "createdAt", order: "DESC" }}
-    resource="business-pages"
     title="Business Directory"
   >
-    <Datagrid
-      rowClick="edit"
-      bulkActionButtons={false} // Строгое требование: без массового удаления
-    >
-      {/* Название и Слаг — основные поля для идентификации */}
+    <Datagrid rowClick="edit" bulkActionButtons={false}>
       <TextField source="name" label="Name" />
       <TextField source="slug" label="URL Slug" />
 
-      {/* География через ReferenceField для отображения имен вместо GUID */}
       <ReferenceField
         source="provinceId"
         reference="provinces"
@@ -86,22 +79,19 @@ export const BusinessList = () => (
         <TextField source="name" />
       </ReferenceField>
 
-      {/* Статус публикации */}
       <BooleanField source="isPublished" label="Live" />
 
-      {/* Технические даты */}
       <DateField source="createdAt" label="Created" showTime />
       <DateField source="updatedAt" label="Updated" showTime />
 
-      {/* Действия в строке */}
-      <Grid container justifyContent="flex-end" gap={1}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
         <EditButton />
         <DeleteButton
-          mutationMode="pessimistic" // С подтверждением перед удалением
+          mutationMode="pessimistic"
           confirmTitle="Delete Business Page"
           confirmContent="Are you sure you want to delete this business? This action cannot be undone."
         />
-      </Grid>
+      </Box>
     </Datagrid>
   </List>
 );

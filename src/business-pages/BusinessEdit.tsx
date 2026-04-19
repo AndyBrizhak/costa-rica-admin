@@ -76,7 +76,6 @@ export const BusinessEdit = () => {
       <SimpleForm>
         <SlugAutoFiller />
         <Grid container spacing={2} sx={{ width: "100%" }}>
-          {/* Секция 1: Основное */}
           <Grid size={{ xs: 12 }}>
             <Typography variant="h6">General Information</Typography>
             <Divider sx={{ mb: 2 }} />
@@ -108,7 +107,6 @@ export const BusinessEdit = () => {
             <TextInput source="description" multiline rows={4} fullWidth />
           </Grid>
 
-          {/* Секция 2: География */}
           <Grid size={{ xs: 12 }} sx={{ mt: 3 }}>
             <Typography variant="h6">Location & Geography</Typography>
             <Divider sx={{ mb: 2 }} />
@@ -149,7 +147,6 @@ export const BusinessEdit = () => {
             <GoogleMapsParser />
           </Grid>
 
-          {/* Секция 3: Категории и Теги */}
           <Grid size={{ xs: 12 }} sx={{ mt: 3 }}>
             <Typography variant="h6">Categorization</Typography>
             <Divider sx={{ mb: 2 }} />
@@ -190,7 +187,6 @@ export const BusinessEdit = () => {
             </ReferenceArrayInput>
           </Grid>
 
-          {/* Секция 4: Медиа */}
           <Grid size={{ xs: 12 }} sx={{ mt: 3 }}>
             <Typography variant="h6">Media Assets</Typography>
             <Divider sx={{ mb: 2 }} />
@@ -209,7 +205,6 @@ export const BusinessEdit = () => {
             </ReferenceArrayInput>
           </Grid>
 
-          {/* Секция 5: Расписание */}
           <Grid size={{ xs: 12 }} sx={{ mt: 3 }}>
             <Typography variant="h6">Schedule</Typography>
             <Divider sx={{ mb: 2 }} />
@@ -250,7 +245,6 @@ export const BusinessEdit = () => {
             </ArrayInput>
           </Grid>
 
-          {/* Секция 6: Контакты */}
           <Grid size={{ xs: 12 }} sx={{ mt: 3 }}>
             <Typography variant="h6">Contacts</Typography>
             <Divider sx={{ mb: 2 }} />
