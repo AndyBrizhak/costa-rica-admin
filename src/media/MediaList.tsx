@@ -11,25 +11,26 @@ import {
   FilterButton,
   ExportButton,
   FunctionField,
+  DeleteButton,
 } from "react-admin";
 import type { MediaRecord } from "./mediaTypes";
 
 /**
- * Фильтры для списка медиа-ассетов.
- * Включают глобальный поиск и фильтр "Сироты".
+ * Filter configurations for the Media Library list.
+ * All labels and placeholders are strictly in English.
  */
 const MediaFilters = [
   <SearchInput
     key="q"
     source="q"
     alwaysOn
-    placeholder="Search slug or alt text..."
+    placeholder="Search by slug or alt..."
   />,
   <BooleanInput key="onlyOrphans" source="onlyOrphans" label="Orphans only" />,
 ];
 
 /**
- * Панель действий над списком.
+ * Global actions for the Media list.
  */
 const MediaActions = () => (
   <TopToolbar>
@@ -39,6 +40,14 @@ const MediaActions = () => (
   </TopToolbar>
 );
 
+/**
+ * Media Library List Component.
+ * * REFACTORING LOG:
+ * 1. Removed ID (GUID) column to reduce technical clutter.
+ * 2. Removed fileName column as requested.
+ * 3. Switched all labels, placeholders, and titles to English.
+ * 4. Implemented inline DeleteButton with pessimistic mutation mode.
+ */
 export const MediaList = () => (
   <List
     filters={MediaFilters}
@@ -48,7 +57,7 @@ export const MediaList = () => (
     resource="media"
   >
     <Datagrid rowClick="edit" bulkActionButtons={false}>
-      {/* Превью изображения */}
+      {/* Thumbnail Preview */}
       <ImageField
         source="url"
         label="Preview"
@@ -62,23 +71,27 @@ export const MediaList = () => (
         }}
       />
 
+      {/* Primary SEO Identifier */}
       <TextField source="slug" label="SEO Slug" />
 
-      <TextField source="fileName" label="File Name" />
-
+      {/* Media MIME Type */}
       <TextField source="contentType" label="Type" />
 
-      {/* Отображение количества связей (Usage) */}
+      {/* Business Associations Count */}
       <FunctionField
         label="Usage"
-        render={(record: MediaRecord) =>
-          record.relatedBusinessIds?.length > 0
-            ? `${record.relatedBusinessIds.length} pages`
-            : "Orphan"
-        }
+        render={(record: MediaRecord) => record.relatedBusinessIds?.length || 0}
       />
 
-      <DateField source="createdAt" label="Uploaded At" showTime />
+      {/* Upload Timestamp */}
+      <DateField source="createdAt" label="Uploaded" />
+
+      {/* Immediate Delete Action */}
+      <DeleteButton
+        label="Delete"
+        mutationMode="pessimistic"
+        redirect={false}
+      />
     </Datagrid>
   </List>
 );
