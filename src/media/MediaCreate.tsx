@@ -8,6 +8,7 @@ import {
   required,
   Toolbar,
   SaveButton,
+  ListButton,
   useDataProvider,
   useNotify,
   useRedirect,
@@ -22,7 +23,11 @@ import {
   LinearProgress,
   Button,
 } from "@mui/material";
-import { useFormContext, type FieldValues } from "react-hook-form";
+import {
+  useFormContext,
+  type FieldValues,
+  type SubmitHandler,
+} from "react-hook-form";
 import { slugify } from "../utils/slugify";
 import { isSlug } from "../utils/validators";
 
@@ -33,6 +38,7 @@ interface RaFileObject {
 }
 
 interface SingleUploadValues extends FieldValues {
+  title: string;
   slug: string;
   altTextEn: string;
   altTextEs: string;
@@ -40,32 +46,75 @@ interface SingleUploadValues extends FieldValues {
 }
 
 interface BulkUploadValues extends FieldValues {
+  baseTitle: string;
   baseSlug: string;
   files: RaFileObject[];
 }
 
+/**
+ * Тулбар с кнопками Save и Cancel для обеих форм
+ */
+const TopFormToolbar = () => (
+  <Toolbar
+    sx={{
+      display: "flex",
+      justifyContent: "space-between",
+      minHeight: "auto",
+      p: 1,
+      mb: 1,
+      backgroundColor: "transparent",
+    }}
+  >
+    <Box sx={{ display: "flex", gap: 1 }}>
+      <SaveButton label="Save" size="small" />
+      <ListButton
+        label="Cancel"
+        size="small"
+        variant="outlined"
+        color="error"
+      />
+    </Box>
+  </Toolbar>
+);
+
+/**
+ * Автоматизация для одиночной загрузки: Title -> Slug -> Alt Text
+ */
 const MediaFormAutomator = () => {
-  const { watch, setValue, getValues } = useFormContext<SingleUploadValues>();
-  const file = watch("file");
+  const { watch, setValue } = useFormContext<SingleUploadValues>();
+  const title = watch("title");
   const slug = watch("slug");
 
   useEffect(() => {
-    const currentSlug = getValues("slug");
-    if (file?.rawFile?.name && !currentSlug) {
-      const fileName = file.rawFile.name.split(".").slice(0, -1).join(".");
-      setValue("slug", slugify(fileName));
+    if (title) {
+      setValue("slug", slugify(title), { shouldValidate: true });
     }
-  }, [file, setValue, getValues]);
+  }, [title, setValue]);
 
   useEffect(() => {
-    const currentAltEn = getValues("altTextEn");
-    if (slug && !currentAltEn) {
+    if (slug) {
       const humanized = slug.replace(/-/g, " ");
       const capitalized =
         humanized.charAt(0).toUpperCase() + humanized.slice(1);
       setValue("altTextEn", capitalized);
     }
-  }, [slug, setValue, getValues]);
+  }, [slug, setValue]);
+
+  return null;
+};
+
+/**
+ * Автоматизация для массовой загрузки: Base Title -> Base Slug
+ */
+const BulkFormAutomator = () => {
+  const { watch, setValue } = useFormContext<BulkUploadValues>();
+  const baseTitle = watch("baseTitle");
+
+  useEffect(() => {
+    if (baseTitle) {
+      setValue("baseSlug", slugify(baseTitle), { shouldValidate: true });
+    }
+  }, [baseTitle, setValue]);
 
   return null;
 };
@@ -76,14 +125,21 @@ const SingleUploadForm = () => (
     <Grid container spacing={1}>
       <Grid size={{ xs: 12, md: 8 }}>
         <Typography variant="caption" fontWeight="bold" color="primary">
-          SEO & SLUG
+          NAME & SEO
         </Typography>
+        <Divider sx={{ mb: 1 }} />
+        <TextInput
+          source="title"
+          label="Title"
+          fullWidth
+          autoFocus
+          size="small"
+        />
         <TextInput
           source="slug"
           label="Slug"
           validate={[required(), isSlug]}
           fullWidth
-          autoFocus
           size="small"
         />
         <Grid container spacing={1} sx={{ mt: 0.5 }}>
@@ -109,6 +165,7 @@ const SingleUploadForm = () => (
         <Typography variant="caption" fontWeight="bold" color="grey.600">
           FILE
         </Typography>
+        <Divider sx={{ mb: 1 }} />
         <ImageInput source="file" label="" validate={[required()]}>
           <ImageField
             source="src"
@@ -133,7 +190,7 @@ const BulkUploadForm = () => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const handleBulkSubmit = async (values: BulkUploadValues) => {
+  const handleBulkSubmit: SubmitHandler<BulkUploadValues> = async (values) => {
     const { baseSlug, files } = values;
     if (!files || files.length === 0) return;
     setLoading(true);
@@ -141,7 +198,7 @@ const BulkUploadForm = () => {
     for (const fileObj of files) {
       try {
         const suffix = Math.random().toString(36).substring(2, 6);
-        const finalSlug = `${slugify(baseSlug)}-${suffix}`;
+        const finalSlug = `${baseSlug}-${suffix}`;
         const humanized = baseSlug.replace(/-/g, " ");
         const finalAlt = humanized.charAt(0).toUpperCase() + humanized.slice(1);
 
@@ -168,71 +225,92 @@ const BulkUploadForm = () => {
     <SimpleForm
       onSubmit={handleBulkSubmit as (v: FieldValues) => Promise<void>}
       toolbar={
-        <Toolbar sx={{ minHeight: "auto", p: 1, mt: 1 }}>
-          <Button
-            variant="contained"
-            type="submit"
-            disabled={loading}
-            size="small"
-          >
-            {loading ? `Uploading ${progress}%` : "Start Bulk Upload"}
-          </Button>
+        <Toolbar
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            minHeight: "auto",
+            p: 1,
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button
+              variant="contained"
+              type="submit"
+              disabled={loading}
+              size="small"
+            >
+              {loading ? `Uploading ${progress}%` : "Upload All"}
+            </Button>
+            <ListButton
+              label="Cancel"
+              size="small"
+              variant="outlined"
+              color="error"
+            />
+          </Box>
         </Toolbar>
       }
     >
+      <BulkFormAutomator />
       <Grid container spacing={1} sx={{ width: "100%" }}>
         <Grid size={{ xs: 12 }}>
-          <Box mb={0.5}>
-            <Typography variant="caption" fontWeight="bold" color="primary">
-              COMMON CONFIG
-            </Typography>
-            <Divider />
-          </Box>
-          <TextInput
-            source="baseSlug"
-            label="Base Slug"
-            validate={[required(), isSlug]}
-            fullWidth
-            size="small"
-          />
+          <Typography variant="caption" fontWeight="bold" color="primary">
+            BULK CONFIG
+          </Typography>
+          <Grid container spacing={1}>
+            <Grid size={{ xs: 6 }}>
+              <TextInput
+                source="baseTitle"
+                label="Base Title"
+                fullWidth
+                size="small"
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <TextInput
+                source="baseSlug"
+                label="Base Slug"
+                validate={[required(), isSlug]}
+                fullWidth
+                size="small"
+              />
+            </Grid>
+          </Grid>
         </Grid>
-
         <Grid size={{ xs: 12 }}>
-          <Box mb={0.5} mt={1}>
-            <Typography variant="caption" fontWeight="bold" color="grey.600">
-              MEDIA SELECTION
-            </Typography>
-            <Divider />
-          </Box>
+          <Typography
+            variant="caption"
+            fontWeight="bold"
+            color="grey.600"
+            sx={{ mt: 1, display: "block" }}
+          >
+            MEDIA SELECTION
+          </Typography>
           <ImageInput
             source="files"
-            label="Drop files"
+            label=""
             multiple
             validate={[required()]}
             sx={{
               "& .RaImageInput-dropZone": {
                 backgroundColor: "#fcfcfc",
                 border: "1px dashed #ccc",
-                padding: "8px",
-                minHeight: "60px",
+                minHeight: "40px",
+                py: 1,
               },
               "& .ra-input-files-list": {
                 display: "flex",
                 flexWrap: "wrap",
-                gap: "2px",
-                mt: 1,
+                gap: "1px",
+                mt: 0.5,
               },
             }}
           >
             <ImageField
               source="src"
               sx={{
-                "& img": {
-                  width: "80px",
-                  height: "80px",
-                  objectFit: "cover",
-                  borderRadius: "2px",
-                },
+                "& img": { width: "60px", height: "60px", objectFit: "cover" },
               }}
             />
           </ImageInput>
@@ -268,13 +346,7 @@ export const MediaCreate = () => {
         </Tabs>
         <Box mt={1}>
           {tab === 0 ? (
-            <SimpleForm
-              toolbar={
-                <Toolbar sx={{ p: 1 }}>
-                  <SaveButton label="Save" size="small" />
-                </Toolbar>
-              }
-            >
+            <SimpleForm toolbar={<TopFormToolbar />}>
               <SingleUploadForm />
             </SimpleForm>
           ) : (

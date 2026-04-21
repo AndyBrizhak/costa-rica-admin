@@ -12,14 +12,23 @@ import {
   Toolbar,
   SaveButton,
   useRecordContext,
+  useNotify,
 } from "react-admin";
-import { Grid, Box, Typography, Divider } from "@mui/material";
+import {
+  Grid,
+  Box,
+  Typography,
+  Divider,
+  InputAdornment,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy"; // Стандартная иконка MUI
 import { isSlug } from "../utils/validators";
 import type { MediaRecord } from "./mediaTypes";
 
 /**
- * Custom Actions for the header (Top Right).
- * We keep only navigation and dangerous actions here.
+ * Кнопки действий в заголовке (верхний правый угол).
  */
 const EditActions = () => {
   const record = useRecordContext<MediaRecord>();
@@ -35,8 +44,7 @@ const EditActions = () => {
 };
 
 /**
- * Custom Form Toolbar positioned at the TOP of the form.
- * This keeps the SaveButton INSIDE the form context.
+ * Верхний тулбар формы с кнопками «Save» и «Cancel».
  */
 const TopFormToolbar = () => (
   <Toolbar
@@ -46,13 +54,53 @@ const TopFormToolbar = () => (
       backgroundColor: "transparent",
       minHeight: "auto",
       p: 0,
-      mb: 2, // Margin bottom to separate from fields
+      mb: 2,
       "& .RaToolbar-defaultToolbar": { backgroundColor: "transparent" },
     }}
   >
-    <SaveButton label="Save Changes" variant="contained" />
+    <Box sx={{ display: "flex", gap: 1 }}>
+      <SaveButton label="Save Changes" variant="contained" />
+      <ListButton label="Cancel" variant="outlined" color="error" />
+    </Box>
   </Toolbar>
 );
+
+/**
+ * Поле для отображения и копирования полной ссылки на изображение.
+ */
+const CopyUrlField = () => {
+  const record = useRecordContext<MediaRecord>();
+  const notify = useNotify();
+
+  if (!record?.url) return null;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(record.url);
+    notify("URL copied to clipboard", { type: "info" });
+  };
+
+  return (
+    <TextInput
+      source="url"
+      label="Full Public URL"
+      fullWidth
+      variant="standard"
+      size="small"
+      InputProps={{
+        readOnly: true,
+        endAdornment: (
+          <InputAdornment position="end">
+            <Tooltip title="Copy URL">
+              <IconButton onClick={handleCopy} size="small" color="primary">
+                <ContentCopyIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </InputAdornment>
+        ),
+      }}
+    />
+  );
+};
 
 export const MediaEdit = () => (
   <Edit
@@ -63,7 +111,7 @@ export const MediaEdit = () => (
   >
     <SimpleForm toolbar={<TopFormToolbar />} reValidateMode="onChange">
       <Grid container spacing={2} sx={{ width: "100%" }}>
-        {/* Main Content Area (8/12) */}
+        {/* Основная область: SEO и Метаданные */}
         <Grid size={{ xs: 12, md: 8 }}>
           <Box sx={{ mb: 1 }}>
             <Typography variant="subtitle2" color="primary" fontWeight="bold">
@@ -112,7 +160,7 @@ export const MediaEdit = () => (
           </Grid>
         </Grid>
 
-        {/* Info & Preview Area (4/12) */}
+        {/* Правая колонка: Превью и техническая информация */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Box sx={{ mb: 1 }}>
             <Typography variant="subtitle2" color="grey.600" fontWeight="bold">
@@ -127,7 +175,7 @@ export const MediaEdit = () => (
               sx={{
                 "& img": {
                   maxWidth: "100%",
-                  maxHeight: "150px", // Limited height for compactness
+                  maxHeight: "150px",
                   objectFit: "contain",
                   borderRadius: 1,
                   display: "block",
@@ -143,6 +191,9 @@ export const MediaEdit = () => (
             p={1.5}
             sx={{ backgroundColor: "#f9f9f9", borderRadius: 1 }}
           >
+            {/* Поле с ссылкой и кнопкой копирования */}
+            <CopyUrlField />
+
             <TextInput
               source="fileName"
               label="File"
@@ -150,6 +201,7 @@ export const MediaEdit = () => (
               fullWidth
               variant="standard"
               size="small"
+              sx={{ mt: 1 }}
             />
             <Box display="flex" justifyContent="space-between" mt={1}>
               <Typography variant="caption" color="textSecondary">
