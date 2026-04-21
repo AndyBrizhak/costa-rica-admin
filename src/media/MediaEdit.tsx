@@ -13,7 +13,7 @@ import {
   SaveButton,
   useRecordContext,
 } from "react-admin";
-import { Grid, Box } from "@mui/material";
+import { Grid, Box, Typography, Divider } from "@mui/material";
 import type { MediaRecord } from "./mediaTypes";
 
 /**
@@ -28,7 +28,7 @@ const EditActions = () => {
       <DeleteButton
         mutationMode="pessimistic"
         confirmTitle={`Delete Media: ${record?.slug}`}
-        confirmContent="Are you sure you want to permanently delete this media asset from storage?"
+        confirmContent="Are you sure you want to permanently delete this media asset? This will break any existing public links."
       />
     </TopToolbar>
   );
@@ -45,9 +45,10 @@ const EditToolbar = () => (
 
 /**
  * Media Edit Component.
- * * FIX LOG:
- * 1. Replaced legacy 'item' and 'xs/md' props with the MUI v6 'size' prop.
- * 2. Maintained clean architecture by separating Actions and Toolbar.
+ * * REFACTORING LOG:
+ * 1. Placed SEO Slug as the primary editable field.
+ * 2. Standardized layout using MUI v6 Grid 'size' prop.
+ * 3. All UI labels and helper texts are in English.
  */
 export const MediaEdit = () => (
   <Edit
@@ -57,37 +58,58 @@ export const MediaEdit = () => (
     actions={<EditActions />}
   >
     <SimpleForm toolbar={<EditToolbar />}>
-      <Grid container spacing={3} sx={{ width: "100%" }}>
-        {/* Left Column: Metadata - Using the correct 'size' prop */}
+      <Grid container spacing={4} sx={{ width: "100%" }}>
+        {/* Left Column: SEO & Metadata Management */}
         <Grid size={{ xs: 12, md: 8 }}>
+          <Box mb={2}>
+            <Typography variant="h6" gutterBottom>
+              SEO Management
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+          </Box>
+
           <TextInput
             source="slug"
             label="SEO Slug"
             validate={[required()]}
             fullWidth
-            helperText="The unique URL-friendly identifier for this image."
+            helperText="The unique URL identifier for this media. Changes will affect the image path."
           />
 
-          <TextInput
-            source="altTextEn"
-            label="Alt Text (English)"
-            fullWidth
-            multiline
-            rows={2}
-          />
+          <Box mt={4}>
+            <Typography variant="subtitle1" gutterBottom>
+              Accessibility & Localization
+            </Typography>
+            <TextInput
+              source="altTextEn"
+              label="Alt Text (English)"
+              fullWidth
+              multiline
+              rows={2}
+              helperText="Describe the image content for screen readers (English)."
+            />
 
-          <TextInput
-            source="altTextEs"
-            label="Alt Text (Spanish)"
-            fullWidth
-            multiline
-            rows={2}
-          />
+            <TextInput
+              source="altTextEs"
+              label="Alt Text (Spanish)"
+              fullWidth
+              multiline
+              rows={2}
+              helperText="Describe the image content for screen readers (Spanish)."
+            />
+          </Box>
         </Grid>
 
-        {/* Right Column: Preview & Tech Info */}
+        {/* Right Column: Preview & Storage Info */}
         <Grid size={{ xs: 12, md: 4 }}>
-          <Labeled label="Current Preview">
+          <Box mb={2}>
+            <Typography variant="h6" gutterBottom>
+              Asset Preview
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+          </Box>
+
+          <Labeled label="Current Image Preview">
             <ImageField
               source="url"
               sx={{
@@ -98,23 +120,33 @@ export const MediaEdit = () => (
                   mt: 1,
                   border: "1px solid #e0e0e0",
                   display: "block",
+                  backgroundColor: "#f5f5f5",
                 },
               }}
             />
           </Labeled>
 
-          <Box mt={3}>
+          <Box
+            mt={3}
+            p={2}
+            sx={{ backgroundColor: "#fafafa", borderRadius: 2 }}
+          >
+            <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+              Storage Details
+            </Typography>
             <TextInput
               source="fileName"
               label="Storage Filename"
               disabled
               fullWidth
+              variant="standard"
             />
             <TextInput
               source="contentType"
               label="MIME Type"
               disabled
               fullWidth
+              variant="standard"
             />
             <Labeled label="Uploaded On" sx={{ display: "block", mt: 2 }}>
               <DateField source="createdAt" showTime />
