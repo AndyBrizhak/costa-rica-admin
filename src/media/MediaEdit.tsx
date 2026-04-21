@@ -14,128 +14,149 @@ import {
   useRecordContext,
 } from "react-admin";
 import { Grid, Box, Typography, Divider } from "@mui/material";
-import { isSlug } from "../utils/validators"; // Импорт нашего чистого валидатора
+import { isSlug } from "../utils/validators";
 import type { MediaRecord } from "./mediaTypes";
 
 /**
- * Custom Top Actions.
+ * Custom Actions for the header (Top Right).
+ * We keep only navigation and dangerous actions here.
  */
 const EditActions = () => {
   const record = useRecordContext<MediaRecord>();
   return (
-    <TopToolbar sx={{ justifyContent: "flex-end", width: "100%", gap: 1 }}>
+    <TopToolbar>
       <ListButton />
       <DeleteButton
         mutationMode="pessimistic"
-        confirmTitle={`Delete Media: ${record?.slug}`}
-        confirmContent="Are you sure you want to permanently delete this media asset?"
+        confirmTitle={`Delete: ${record?.slug}`}
       />
     </TopToolbar>
   );
 };
 
-const EditToolbar = () => (
-  <Toolbar>
-    <SaveButton />
+/**
+ * Custom Form Toolbar positioned at the TOP of the form.
+ * This keeps the SaveButton INSIDE the form context.
+ */
+const TopFormToolbar = () => (
+  <Toolbar
+    sx={{
+      display: "flex",
+      justifyContent: "space-between",
+      backgroundColor: "transparent",
+      minHeight: "auto",
+      p: 0,
+      mb: 2, // Margin bottom to separate from fields
+      "& .RaToolbar-defaultToolbar": { backgroundColor: "transparent" },
+    }}
+  >
+    <SaveButton label="Save Changes" variant="contained" />
   </Toolbar>
 );
 
-/**
- * Media Edit Component with strict SEO validation.
- */
 export const MediaEdit = () => (
   <Edit
-    title="Edit Media Metadata"
+    title="Edit Media"
     mutationMode="pessimistic"
     resource="media"
     actions={<EditActions />}
   >
-    <SimpleForm toolbar={<EditToolbar />} reValidateMode="onChange">
-      <Grid container spacing={4} sx={{ width: "100%" }}>
-        {/* SEO Section */}
+    <SimpleForm toolbar={<TopFormToolbar />} reValidateMode="onChange">
+      <Grid container spacing={2} sx={{ width: "100%" }}>
+        {/* Main Content Area (8/12) */}
         <Grid size={{ xs: 12, md: 8 }}>
-          <Box mb={2}>
-            <Typography variant="h6" gutterBottom>
-              SEO Management
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="subtitle2" color="primary" fontWeight="bold">
+              SEO & PATH
             </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Divider />
           </Box>
 
           <TextInput
             source="slug"
             label="SEO Slug"
-            // Используем композицию валидаторов: обязательность + формат
             validate={[required(), isSlug]}
             fullWidth
-            helperText="Lowercase letters, numbers, and hyphens only."
+            size="small"
+            helperText="Lowercase, numbers, hyphens only."
           />
 
-          <Box mt={4}>
-            <Typography variant="subtitle1" gutterBottom>
-              Localization
+          <Box sx={{ mt: 2, mb: 1 }}>
+            <Typography variant="subtitle2" color="primary" fontWeight="bold">
+              LOCALIZATION (ALT TEXT)
             </Typography>
-            <TextInput
-              source="altTextEn"
-              label="Alt Text (English)"
-              fullWidth
-              multiline
-              rows={2}
-            />
-            <TextInput
-              source="altTextEs"
-              label="Alt Text (Spanish)"
-              fullWidth
-              multiline
-              rows={2}
-            />
+            <Divider />
           </Box>
+
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextInput
+                source="altTextEn"
+                label="Alt English"
+                fullWidth
+                multiline
+                rows={2}
+                size="small"
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextInput
+                source="altTextEs"
+                label="Alt Spanish"
+                fullWidth
+                multiline
+                rows={2}
+                size="small"
+              />
+            </Grid>
+          </Grid>
         </Grid>
 
-        {/* Technical Section */}
+        {/* Info & Preview Area (4/12) */}
         <Grid size={{ xs: 12, md: 4 }}>
-          <Box mb={2}>
-            <Typography variant="h6" gutterBottom>
-              Preview
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="subtitle2" color="grey.600" fontWeight="bold">
+              ASSET INFO
             </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Divider />
           </Box>
 
-          <Labeled label="Current Image">
+          <Labeled label="Preview">
             <ImageField
               source="url"
               sx={{
                 "& img": {
                   maxWidth: "100%",
-                  height: "auto",
-                  borderRadius: 2,
+                  maxHeight: "150px", // Limited height for compactness
+                  objectFit: "contain",
+                  borderRadius: 1,
                   display: "block",
+                  mt: 1,
+                  border: "1px solid #eee",
                 },
               }}
             />
           </Labeled>
 
           <Box
-            mt={3}
-            p={2}
-            sx={{ backgroundColor: "#fafafa", borderRadius: 2 }}
+            mt={1}
+            p={1.5}
+            sx={{ backgroundColor: "#f9f9f9", borderRadius: 1 }}
           >
             <TextInput
               source="fileName"
-              label="Storage Filename"
+              label="File"
               disabled
               fullWidth
               variant="standard"
+              size="small"
             />
-            <TextInput
-              source="contentType"
-              label="MIME Type"
-              disabled
-              fullWidth
-              variant="standard"
-            />
-            <Labeled label="Uploaded On" sx={{ display: "block", mt: 2 }}>
-              <DateField source="createdAt" showTime />
-            </Labeled>
+            <Box display="flex" justifyContent="space-between" mt={1}>
+              <Typography variant="caption" color="textSecondary">
+                Uploaded:
+              </Typography>
+              <DateField source="createdAt" showTime textAlign="right" />
+            </Box>
           </Box>
         </Grid>
       </Grid>
