@@ -5,80 +5,85 @@ import {
   DateField,
   ImageField,
   SearchInput,
-  BooleanInput,
   TopToolbar,
   CreateButton,
-  FilterButton,
   ExportButton,
-  FunctionField,
+  DeleteButton,
 } from "react-admin";
-import type { MediaRecord } from "./mediaTypes";
 
-/**
- * Фильтры для списка медиа-ассетов.
- * Включают глобальный поиск и фильтр "Сироты".
- */
 const MediaFilters = [
-  <SearchInput
-    key="q"
-    source="q"
-    alwaysOn
-    placeholder="Search slug or alt text..."
-  />,
-  <BooleanInput key="onlyOrphans" source="onlyOrphans" label="Orphans only" />,
+  <SearchInput key="q" source="q" alwaysOn placeholder="Search slug..." />,
 ];
 
-/**
- * Панель действий над списком.
- */
 const MediaActions = () => (
-  <TopToolbar>
-    <FilterButton />
-    <CreateButton label="Upload Media" />
-    <ExportButton />
+  <TopToolbar sx={{ minHeight: "auto", mb: 1 }}>
+    <CreateButton label="Upload" size="small" />
+    <ExportButton size="small" />
   </TopToolbar>
 );
 
+/**
+ * Media List: High-Density Refactoring
+ * - Vertical: size="small" + 4px padding
+ * - Horizontal: 40px thumbnails + icon-only actions
+ * - UI Language: English Only
+ */
 export const MediaList = () => (
   <List
     filters={MediaFilters}
     actions={<MediaActions />}
     sort={{ field: "createdAt", order: "DESC" }}
-    title="Media Library"
+    title="Media"
     resource="media"
+    sx={{ mt: 0 }}
   >
-    <Datagrid rowClick="edit" bulkActionButtons={false}>
-      {/* Превью изображения */}
+    <Datagrid
+      rowClick="edit"
+      bulkActionButtons={false}
+      size="small" // MUI standard small
+      sx={{
+        "& .MuiTableCell-root": {
+          padding: "4px 8px", // Ultra-tight spacing
+        },
+        "& .MuiTypography-root": {
+          fontSize: "0.85rem", // Slightly smaller text
+        },
+      }}
+    >
+      {/* Tiny Thumbnail Preview */}
       <ImageField
         source="url"
-        label="Preview"
+        label="Img"
         sx={{
           "& img": {
-            maxWidth: 80,
-            maxHeight: 80,
+            width: 40,
+            height: 40,
             objectFit: "cover",
-            borderRadius: 1,
+            borderRadius: 0.5,
           },
         }}
       />
 
-      <TextField source="slug" label="SEO Slug" />
+      {/* Main Identifier */}
+      <TextField source="slug" label="Slug" />
 
-      <TextField source="fileName" label="File Name" />
-
-      <TextField source="contentType" label="Type" />
-
-      {/* Отображение количества связей (Usage) */}
-      <FunctionField
-        label="Usage"
-        render={(record: MediaRecord) =>
-          record.relatedBusinessIds?.length > 0
-            ? `${record.relatedBusinessIds.length} pages`
-            : "Orphan"
-        }
+      {/* Tech info: compressed labels and content */}
+      <TextField
+        source="contentType"
+        label="Type"
+        sx={{ color: "text.secondary" }}
       />
 
-      <DateField source="createdAt" label="Uploaded At" showTime />
+      {/* Minimal Date View */}
+      <DateField source="createdAt" label="Date" showTime={false} />
+
+      {/* Minimal Action: Icon Only */}
+      <DeleteButton
+        label=""
+        mutationMode="pessimistic"
+        redirect={false}
+        sx={{ p: 0.5 }}
+      />
     </Datagrid>
   </List>
 );
