@@ -5,92 +5,84 @@ import {
   DateField,
   ImageField,
   SearchInput,
-  BooleanInput,
   TopToolbar,
   CreateButton,
-  FilterButton,
   ExportButton,
-  FunctionField,
   DeleteButton,
 } from "react-admin";
-import type { MediaRecord } from "./mediaTypes";
 
-/**
- * Filter configurations for the Media Library list.
- * All labels and placeholders are strictly in English.
- */
 const MediaFilters = [
-  <SearchInput
-    key="q"
-    source="q"
-    alwaysOn
-    placeholder="Search by slug or alt..."
-  />,
-  <BooleanInput key="onlyOrphans" source="onlyOrphans" label="Orphans only" />,
+  <SearchInput key="q" source="q" alwaysOn placeholder="Search slug..." />,
 ];
 
-/**
- * Global actions for the Media list.
- */
 const MediaActions = () => (
-  <TopToolbar>
-    <FilterButton />
-    <CreateButton label="Upload Media" />
-    <ExportButton />
+  <TopToolbar sx={{ minHeight: "auto", mb: 1 }}>
+    <CreateButton label="Upload" size="small" />
+    <ExportButton size="small" />
   </TopToolbar>
 );
 
 /**
- * Media Library List Component.
- * * REFACTORING LOG:
- * 1. Removed ID (GUID) column to reduce technical clutter.
- * 2. Removed fileName column as requested.
- * 3. Switched all labels, placeholders, and titles to English.
- * 4. Implemented inline DeleteButton with pessimistic mutation mode.
+ * Media List: High-Density Refactoring
+ * - Vertical: size="small" + 4px padding
+ * - Horizontal: 40px thumbnails + icon-only actions
+ * - UI Language: English Only
  */
 export const MediaList = () => (
   <List
     filters={MediaFilters}
     actions={<MediaActions />}
     sort={{ field: "createdAt", order: "DESC" }}
-    title="Media Library"
+    title="Media"
     resource="media"
+    sx={{ mt: 0 }}
   >
-    <Datagrid rowClick="edit" bulkActionButtons={false}>
-      {/* Thumbnail Preview */}
+    <Datagrid
+      rowClick="edit"
+      bulkActionButtons={false}
+      size="small" // MUI standard small
+      sx={{
+        "& .MuiTableCell-root": {
+          padding: "4px 8px", // Ultra-tight spacing
+        },
+        "& .MuiTypography-root": {
+          fontSize: "0.85rem", // Slightly smaller text
+        },
+      }}
+    >
+      {/* Tiny Thumbnail Preview */}
       <ImageField
         source="url"
-        label="Preview"
+        label="Img"
         sx={{
           "& img": {
-            maxWidth: 80,
-            maxHeight: 80,
+            width: 40,
+            height: 40,
             objectFit: "cover",
-            borderRadius: 1,
+            borderRadius: 0.5,
           },
         }}
       />
 
-      {/* Primary SEO Identifier */}
-      <TextField source="slug" label="SEO Slug" />
+      {/* Main Identifier */}
+      <TextField source="slug" label="Slug" />
 
-      {/* Media MIME Type */}
-      <TextField source="contentType" label="Type" />
-
-      {/* Business Associations Count */}
-      <FunctionField
-        label="Usage"
-        render={(record: MediaRecord) => record.relatedBusinessIds?.length || 0}
+      {/* Tech info: compressed labels and content */}
+      <TextField
+        source="contentType"
+        label="Type"
+        sx={{ color: "text.secondary" }}
       />
 
-      {/* Upload Timestamp */}
-      <DateField source="createdAt" label="Uploaded" />
+      {/* Minimal Date View */}
+      <DateField source="createdAt" label="Date" showTime={false} />
 
-      {/* Immediate Delete Action */}
+      {/* Minimal Action: Icon Only */}
       <DeleteButton
-        label="Delete"
+        label=""
         mutationMode="pessimistic"
         redirect={false}
+        sx={{ p: 0.5 }}
       />
     </Datagrid>
   </List>
