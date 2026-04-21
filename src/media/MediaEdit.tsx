@@ -14,29 +14,26 @@ import {
   useRecordContext,
 } from "react-admin";
 import { Grid, Box, Typography, Divider } from "@mui/material";
+import { isSlug } from "../utils/validators"; // Импорт нашего чистого валидатора
 import type { MediaRecord } from "./mediaTypes";
 
 /**
- * Custom Top Actions for the Edit View.
+ * Custom Top Actions.
  */
 const EditActions = () => {
   const record = useRecordContext<MediaRecord>();
-
   return (
     <TopToolbar sx={{ justifyContent: "flex-end", width: "100%", gap: 1 }}>
       <ListButton />
       <DeleteButton
         mutationMode="pessimistic"
         confirmTitle={`Delete Media: ${record?.slug}`}
-        confirmContent="Are you sure you want to permanently delete this media asset? This will break any existing public links."
+        confirmContent="Are you sure you want to permanently delete this media asset?"
       />
     </TopToolbar>
   );
 };
 
-/**
- * Custom Bottom Toolbar.
- */
 const EditToolbar = () => (
   <Toolbar>
     <SaveButton />
@@ -44,11 +41,7 @@ const EditToolbar = () => (
 );
 
 /**
- * Media Edit Component.
- * * REFACTORING LOG:
- * 1. Placed SEO Slug as the primary editable field.
- * 2. Standardized layout using MUI v6 Grid 'size' prop.
- * 3. All UI labels and helper texts are in English.
+ * Media Edit Component with strict SEO validation.
  */
 export const MediaEdit = () => (
   <Edit
@@ -57,9 +50,9 @@ export const MediaEdit = () => (
     resource="media"
     actions={<EditActions />}
   >
-    <SimpleForm toolbar={<EditToolbar />}>
+    <SimpleForm toolbar={<EditToolbar />} reValidateMode="onChange">
       <Grid container spacing={4} sx={{ width: "100%" }}>
-        {/* Left Column: SEO & Metadata Management */}
+        {/* SEO Section */}
         <Grid size={{ xs: 12, md: 8 }}>
           <Box mb={2}>
             <Typography variant="h6" gutterBottom>
@@ -71,14 +64,15 @@ export const MediaEdit = () => (
           <TextInput
             source="slug"
             label="SEO Slug"
-            validate={[required()]}
+            // Используем композицию валидаторов: обязательность + формат
+            validate={[required(), isSlug]}
             fullWidth
-            helperText="The unique URL identifier for this media. Changes will affect the image path."
+            helperText="Lowercase letters, numbers, and hyphens only."
           />
 
           <Box mt={4}>
             <Typography variant="subtitle1" gutterBottom>
-              Accessibility & Localization
+              Localization
             </Typography>
             <TextInput
               source="altTextEn"
@@ -86,30 +80,27 @@ export const MediaEdit = () => (
               fullWidth
               multiline
               rows={2}
-              helperText="Describe the image content for screen readers (English)."
             />
-
             <TextInput
               source="altTextEs"
               label="Alt Text (Spanish)"
               fullWidth
               multiline
               rows={2}
-              helperText="Describe the image content for screen readers (Spanish)."
             />
           </Box>
         </Grid>
 
-        {/* Right Column: Preview & Storage Info */}
+        {/* Technical Section */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Box mb={2}>
             <Typography variant="h6" gutterBottom>
-              Asset Preview
+              Preview
             </Typography>
             <Divider sx={{ mb: 2 }} />
           </Box>
 
-          <Labeled label="Current Image Preview">
+          <Labeled label="Current Image">
             <ImageField
               source="url"
               sx={{
@@ -117,10 +108,7 @@ export const MediaEdit = () => (
                   maxWidth: "100%",
                   height: "auto",
                   borderRadius: 2,
-                  mt: 1,
-                  border: "1px solid #e0e0e0",
                   display: "block",
-                  backgroundColor: "#f5f5f5",
                 },
               }}
             />
@@ -131,9 +119,6 @@ export const MediaEdit = () => (
             p={2}
             sx={{ backgroundColor: "#fafafa", borderRadius: 2 }}
           >
-            <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-              Storage Details
-            </Typography>
             <TextInput
               source="fileName"
               label="Storage Filename"
