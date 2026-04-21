@@ -16,7 +16,7 @@ import { isSlug } from "../utils/validators";
 
 /**
  * Custom Form Toolbar positioned at the TOP.
- * Keeps the 'Save' action immediately accessible.
+ * Ensures the 'Upload' action is always visible without scrolling.
  */
 const TopFormToolbar = () => (
   <Toolbar
@@ -35,7 +35,7 @@ const TopFormToolbar = () => (
 );
 
 /**
- * Auto-fills the slug based on the selected filename if the slug field is empty.
+ * Component that watches the file input and auto-generates a slug.
  */
 const SlugAutoFiller = () => {
   const { watch, setValue, getValues } = useFormContext();
@@ -43,19 +43,19 @@ const SlugAutoFiller = () => {
 
   useEffect(() => {
     const currentSlug = getValues("slug");
+    // If a file is selected and the slug is still empty, auto-generate it
     if (file?.rawFile?.name && !currentSlug) {
-      const fileName = file.rawFile.name.split(".").slice(0, -1).join(".");
-      setValue("slug", slugify(fileName));
+      const fileNameWithoutExtension = file.rawFile.name
+        .split(".")
+        .slice(0, -1)
+        .join(".");
+      setValue("slug", slugify(fileNameWithoutExtension));
     }
   }, [file, setValue, getValues]);
 
   return null;
 };
 
-/**
- * Media Create Component.
- * Optimized for speed: Slug auto-focus, SEO-first layout, and compact preview.
- */
 export const MediaCreate = () => (
   <Create title="Upload New Media" resource="media">
     <SimpleForm toolbar={<TopFormToolbar />} reValidateMode="onChange">
@@ -66,7 +66,7 @@ export const MediaCreate = () => (
         <Grid size={{ xs: 12, md: 8 }}>
           <Box sx={{ mb: 1 }}>
             <Typography variant="subtitle2" color="primary" fontWeight="bold">
-              1. SEO IDENTIFIER
+              1. SEO & SLUG CONFIGURATION
             </Typography>
             <Divider />
           </Box>
@@ -74,11 +74,12 @@ export const MediaCreate = () => (
           <TextInput
             source="slug"
             label="SEO Slug"
+            // Combined validation: required + Google SEO format
             validate={[required(), isSlug]}
             fullWidth
-            autoFocus // Automatically sets cursor here on load
+            autoFocus
             size="small"
-            helperText="REQUIRED: lowercase, numbers, and hyphens only. Example: 'villa-ocean-view-1'"
+            helperText="REQUIRED: Only lowercase, numbers, and hyphens allowed. Auto-filled from filename."
           />
 
           <Box sx={{ mt: 3, mb: 1 }}>
@@ -112,26 +113,28 @@ export const MediaCreate = () => (
           </Grid>
         </Grid>
 
-        {/* Right Column: File Selection & Preview (4/12) */}
+        {/* Right Column: Dropzone & Preview (4/12) */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Box sx={{ mb: 1 }}>
             <Typography variant="subtitle2" color="grey.600" fontWeight="bold">
-              3. MEDIA FILE
+              3. SELECT IMAGE
             </Typography>
             <Divider />
           </Box>
 
           <ImageInput
             source="file"
-            label="Drop or Click"
+            label="Drop file or click"
             accept={{ "image/*": [".png", ".jpg", ".jpeg", ".webp"] }}
             validate={[required()]}
             sx={{
               "& .RaImageInput-dropZone": {
                 p: 1,
-                minHeight: "100px",
+                minHeight: "120px",
                 border: "2px dashed #e0e0e0",
                 backgroundColor: "#fafafa",
+                transition: "border .3s ease-in-out",
+                "&:hover": { borderColor: "primary.main" },
               },
             }}
           >
@@ -141,9 +144,10 @@ export const MediaCreate = () => (
               sx={{
                 "& img": {
                   maxWidth: "100%",
-                  maxHeight: "180px",
+                  maxHeight: "160px",
                   borderRadius: 1,
                   objectFit: "contain",
+                  mt: 1,
                 },
               }}
             />
