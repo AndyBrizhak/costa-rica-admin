@@ -12,13 +12,13 @@ import {
   SimpleFormIterator,
   required,
 } from "react-admin";
-import { Grid, Typography, Divider, Button } from "@mui/material";
-import { useFormContext } from "react-hook-form";
+import { Grid, Typography, Divider, Button, Box } from "@mui/material";
+import { useFormContext, useWatch } from "react-hook-form";
 import { SlugAutoFiller } from "./SlugAutoFiller";
 import { isSlug } from "../utils/validators";
 
 /**
- * Вспомогательный компонент для извлечения координат из URL Google Maps.
+ * Компонент для парсинга GPS-координат из ссылок Google Maps.
  */
 const GoogleMapsParser = () => {
   const { setValue, watch } = useFormContext();
@@ -26,7 +26,6 @@ const GoogleMapsParser = () => {
 
   const handleParse = () => {
     if (!mapsUrl) return;
-    // Регулярное выражение для поиска координат в URL
     const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
     const match = mapsUrl.match(regex);
     if (match) {
@@ -52,9 +51,98 @@ const GoogleMapsParser = () => {
   );
 };
 
+/**
+ * Подкомпонент для вкладки Taxonomy.
+ * Вынесен отдельно, чтобы useWatch имел доступ к контексту формы внутри TabbedForm.
+ */
+const TaxonomyFields = () => {
+  const selectedTagGroupId = useWatch({ name: "ui_tag_group_id" });
+
+  return (
+    <Grid container spacing={2}>
+      {/* Основная категория Google */}
+      <Grid size={12}>
+        <ReferenceInput
+          source="primaryCategoryId"
+          reference="google-categories"
+        >
+          <AutocompleteInput
+            optionText="nameEn"
+            label="Primary Google Category (Search: 3+ chars)"
+            fullWidth
+            shouldRenderSuggestions={(val: string) => val.length > 2}
+            noOptionsText="Type 3+ characters to search"
+          />
+        </ReferenceInput>
+      </Grid>
+
+      {/* Дополнительные категории Google */}
+      <Grid size={12}>
+        <ReferenceArrayInput
+          source="additionalCategoryIds"
+          reference="google-categories"
+        >
+          <AutocompleteArrayInput
+            optionText="nameEn"
+            label="Additional Google Categories (Optional)"
+            fullWidth
+            shouldRenderSuggestions={(val: string) => val.length > 2}
+          />
+        </ReferenceArrayInput>
+      </Grid>
+
+      <Grid size={12}>
+        <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1 }}>
+          <Typography variant="subtitle2" gutterBottom color="primary">
+            Tag Management Tool
+          </Typography>
+
+          {/* 1. Выбор группы тегов (виртуальное поле) */}
+          <ReferenceInput source="ui_tag_group_id" reference="tag-groups">
+            <AutocompleteInput
+              label="1. Filter by Tag Group"
+              optionText="nameEn"
+              fullWidth
+            />
+          </ReferenceInput>
+
+          {/* 2. Выбор тегов, отфильтрованных по группе */}
+          <ReferenceArrayInput
+            source="tagIds"
+            reference="tags"
+            filter={
+              selectedTagGroupId
+                ? { tagGroupId: selectedTagGroupId }
+                : { id: "00000000-0000-0000-0000-000000000000" }
+            }
+          >
+            <AutocompleteArrayInput
+              optionText="nameEn"
+              label="2. Select Tags from Group"
+              fullWidth
+              disabled={!selectedTagGroupId}
+            />
+          </ReferenceArrayInput>
+          {!selectedTagGroupId && (
+            <Typography
+              variant="caption"
+              color="textSecondary"
+              display="block"
+              sx={{ mt: 1 }}
+            >
+              * Please select a Tag Group first to browse available tags.
+            </Typography>
+          )}
+        </Box>
+      </Grid>
+    </Grid>
+  );
+};
+
 export const BusinessCreate = () => (
   <Create title="Add New Business" redirect="show">
-    <TabbedForm defaultValues={{ isPublished: true, languageCode: "es" }}>
+    {/* languageCode теперь по умолчанию "en" */}
+    <TabbedForm defaultValues={{ isPublished: true, languageCode: "en" }}>
       {/* Вкладка 1: Основное */}
       <FormTab label="General">
         <SlugAutoFiller />
@@ -90,7 +178,7 @@ export const BusinessCreate = () => (
           <Grid size={{ xs: 12, md: 6 }}>
             <TextInput
               source="languageCode"
-              label="Language (e.g. es)"
+              label="Language Code"
               validate={[required()]}
               fullWidth
             />
@@ -98,7 +186,7 @@ export const BusinessCreate = () => (
         </Grid>
       </FormTab>
 
-      {/* Вкладка 2: Локация */}
+      {/* Вкладка 2: География */}
       <FormTab label="Geography">
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -113,17 +201,23 @@ export const BusinessCreate = () => (
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <ReferenceInput source="cityId" reference="cities">
-              <AutocompleteInput optionText="name" label="City" fullWidth />
+              <AutocompleteInput
+                optionText="name"
+                label="City (Search: 3+ chars)"
+                fullWidth
+                shouldRenderSuggestions={(val: string) => val.length > 2}
+                noOptionsText="Type at least 3 characters..."
+              />
             </ReferenceInput>
           </Grid>
 
           <Grid size={12} sx={{ mt: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
-              Google Maps Integration
+              Maps Integration
             </Typography>
             <TextInput
               source="googleMapsUrl"
-              label="Paste Google Maps Link here"
+              label="Google Maps Link"
               fullWidth
             />
             <GoogleMapsParser />
@@ -142,31 +236,9 @@ export const BusinessCreate = () => (
         </Grid>
       </FormTab>
 
-      {/* Вкладка 3: Категории */}
+      {/* Вкладка 3: Таксономия */}
       <FormTab label="Taxonomy">
-        <Grid container spacing={2}>
-          <Grid size={12}>
-            <ReferenceInput
-              source="primaryCategoryId"
-              reference="google-categories"
-            >
-              <AutocompleteInput
-                optionText="nameEn"
-                label="Primary Category"
-                fullWidth
-              />
-            </ReferenceInput>
-          </Grid>
-          <Grid size={12}>
-            <ReferenceArrayInput source="tagIds" reference="tags">
-              <AutocompleteArrayInput
-                optionText="nameEn"
-                label="Tags"
-                fullWidth
-              />
-            </ReferenceArrayInput>
-          </Grid>
-        </Grid>
+        <TaxonomyFields />
       </FormTab>
 
       {/* Вкладка 4: Расписание */}
@@ -210,7 +282,7 @@ export const BusinessCreate = () => (
       {/* Вкладка 5: SEO и Контакты */}
       <FormTab label="SEO & Contacts">
         <Typography variant="h6" gutterBottom>
-          Contact Info
+          Communication
         </Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -242,11 +314,9 @@ export const BusinessCreate = () => (
             />
           </Grid>
         </Grid>
-
         <Divider sx={{ my: 3 }} />
-
         <Typography variant="h6" gutterBottom>
-          SEO Settings
+          SEO Metadata
         </Typography>
         <Grid container spacing={2}>
           <Grid size={12}>
