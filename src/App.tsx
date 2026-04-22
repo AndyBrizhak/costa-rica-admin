@@ -52,6 +52,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 import { BusinessList } from "./business-pages/BusinessList";
 import { BusinessCreate } from "./business-pages/BusinessCreate";
 import { BusinessEdit } from "./business-pages/BusinessEdit";
+import { BusinessShow } from "./business-pages/BusinessShow";
 
 /**
  * Базовый провайдер для стандартных ресурсов
@@ -187,6 +188,7 @@ const App = () => (
       list={BusinessList}
       create={BusinessCreate}
       edit={BusinessEdit}
+      show={BusinessShow}
       options={{ label: "Business Pages" }}
       icon={Store}
       recordRepresentation="name"
