@@ -16,9 +16,10 @@ import { Grid, Typography, Divider, Button, Box } from "@mui/material";
 import { useFormContext, useWatch } from "react-hook-form";
 import { SlugAutoFiller } from "./SlugAutoFiller";
 import { isSlug } from "../utils/validators";
+import { BusinessMediaFields } from "./BusinessMediaFields";
 
 /**
- * Parses GPS from Google Maps URL strings.
+ * Component to parse GPS coordinates from Google Maps URL.
  */
 const GoogleMapsParser = () => {
   const { setValue, watch } = useFormContext();
@@ -52,7 +53,7 @@ const GoogleMapsParser = () => {
 };
 
 /**
- * Geography Fields: Handles province-dependent city loading.
+ * Geography Tab: Smart city filtering based on selected province.
  */
 const GeographyTabFields = () => {
   const provinceId = useWatch({ name: "provinceId" });
@@ -85,7 +86,6 @@ const GeographyTabFields = () => {
                 : "City (Type to search)"
             }
             fullWidth
-            // Opens immediately if province is selected, else waits for 1 character
             shouldRenderSuggestions={(val: string) =>
               provinceId ? true : val.length > 0
             }
@@ -94,14 +94,10 @@ const GeographyTabFields = () => {
                 ? "No cities found for this province"
                 : "Type to search..."
             }
-            helperText={
-              provinceId
-                ? "Showing up to 100 cities alphabetically. Start typing to filter."
-                : ""
-            }
           />
         </ReferenceInput>
       </Grid>
+
       <Grid size={12} sx={{ mt: 2 }}>
         <Typography variant="subtitle2" gutterBottom>
           Maps Integration
@@ -109,6 +105,7 @@ const GeographyTabFields = () => {
         <TextInput source="googleMapsUrl" label="Google Maps Link" fullWidth />
         <GoogleMapsParser />
       </Grid>
+
       <Grid size={{ xs: 6, md: 3 }}>
         <TextInput source="location.latitude" label="Latitude" fullWidth />
       </Grid>
@@ -120,7 +117,7 @@ const GeographyTabFields = () => {
 };
 
 /**
- * Taxonomy Fields: Handles categories and dependent tag filtering.
+ * Taxonomy Tab: Google categories and dependent tags.
  */
 const TaxonomyTabFields = () => {
   const selectedTagGroupId = useWatch({ name: "ui_tag_group_id" });
@@ -140,6 +137,7 @@ const TaxonomyTabFields = () => {
           />
         </ReferenceInput>
       </Grid>
+
       <Grid size={12}>
         <ReferenceArrayInput
           source="additionalCategoryIds"
@@ -153,11 +151,13 @@ const TaxonomyTabFields = () => {
           />
         </ReferenceArrayInput>
       </Grid>
+
       <Grid size={12}>
         <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1 }}>
           <Typography variant="subtitle2" gutterBottom color="primary">
-            Tag Management
+            Tag Management Tool
           </Typography>
+
           <ReferenceInput source="ui_tag_group_id" reference="tag-groups">
             <AutocompleteInput
               label="1. Filter by Tag Group"
@@ -165,6 +165,7 @@ const TaxonomyTabFields = () => {
               fullWidth
             />
           </ReferenceInput>
+
           <ReferenceArrayInput
             source="tagIds"
             reference="tags"
@@ -176,7 +177,7 @@ const TaxonomyTabFields = () => {
           >
             <AutocompleteArrayInput
               optionText="nameEn"
-              label="2. Select Tags"
+              label="2. Select Tags from Group"
               fullWidth
               disabled={!selectedTagGroupId}
             />
@@ -231,12 +232,19 @@ export const BusinessCreate = () => (
           </Grid>
         </Grid>
       </FormTab>
+
       <FormTab label="Geography">
         <GeographyTabFields />
       </FormTab>
+
       <FormTab label="Taxonomy">
         <TaxonomyTabFields />
       </FormTab>
+
+      <FormTab label="Media">
+        <BusinessMediaFields />
+      </FormTab>
+
       <FormTab label="Schedule">
         <ArrayInput source="schedule" label={false}>
           <SimpleFormIterator inline>
@@ -273,6 +281,7 @@ export const BusinessCreate = () => (
           </SimpleFormIterator>
         </ArrayInput>
       </FormTab>
+
       <FormTab label="SEO & Contacts">
         <Typography variant="h6" gutterBottom>
           Communication
