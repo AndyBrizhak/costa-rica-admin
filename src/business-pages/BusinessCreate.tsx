@@ -19,7 +19,7 @@ import { isSlug } from "../utils/validators";
 import { BusinessMediaFields } from "./BusinessMediaFields";
 
 /**
- * Component to parse GPS coordinates from Google Maps URL.
+ * Вспомогательный компонент для извлечения координат из ссылок Google Maps.
  */
 const GoogleMapsParser = () => {
   const { setValue, watch } = useFormContext();
@@ -53,7 +53,7 @@ const GoogleMapsParser = () => {
 };
 
 /**
- * Geography Tab: Smart city filtering based on selected province.
+ * Вкладка Географии: Умная фильтрация городов на основе выбранной провинции.
  */
 const GeographyTabFields = () => {
   const provinceId = useWatch({ name: "provinceId" });
@@ -117,7 +117,7 @@ const GeographyTabFields = () => {
 };
 
 /**
- * Taxonomy Tab: Google categories and dependent tags.
+ * Вкладка Таксономии: Категории Google и зависимые теги.
  */
 const TaxonomyTabFields = () => {
   const selectedTagGroupId = useWatch({ name: "ui_tag_group_id" });
@@ -191,6 +191,7 @@ const TaxonomyTabFields = () => {
 export const BusinessCreate = () => (
   <Create title="Add New Business" redirect="show">
     <TabbedForm defaultValues={{ isPublished: true, languageCode: "en" }}>
+      {/* Вкладка 1: Основное */}
       <FormTab label="General">
         <SlugAutoFiller />
         <Grid container spacing={2}>
@@ -233,18 +234,22 @@ export const BusinessCreate = () => (
         </Grid>
       </FormTab>
 
+      {/* Вкладка 2: География */}
       <FormTab label="Geography">
         <GeographyTabFields />
       </FormTab>
 
+      {/* Вкладка 3: Категории и теги */}
       <FormTab label="Taxonomy">
         <TaxonomyTabFields />
       </FormTab>
 
+      {/* Вкладка 4: Медиа (Галерея) */}
       <FormTab label="Media">
         <BusinessMediaFields />
       </FormTab>
 
+      {/* Вкладка 5: Расписание */}
       <FormTab label="Schedule">
         <ArrayInput source="schedule" label={false}>
           <SimpleFormIterator inline>
@@ -282,6 +287,7 @@ export const BusinessCreate = () => (
         </ArrayInput>
       </FormTab>
 
+      {/* Вкладка 6: Контакты и SEO */}
       <FormTab label="SEO & Contacts">
         <Typography variant="h6" gutterBottom>
           Communication
