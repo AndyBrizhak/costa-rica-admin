@@ -6,23 +6,26 @@ import {
   DateField,
   BooleanField,
   ReferenceField,
+  ReferenceArrayField,
+  SingleFieldList,
+  ChipField,
   ArrayField,
   Datagrid,
   UrlField,
-  NumberField,
+  ImageField,
   Labeled,
 } from "react-admin";
 import { Grid, Typography, Divider, Box, Paper } from "@mui/material";
 
 /**
- * Улучшенная страница просмотра (Refactored for MUI v6+).
- * Используем Grid2 и проп size для соответствия актуальному API.
+ * Страница просмотра бизнеса.
+ * Полностью синхронизирована по структуре с формами Create и Edit.
  */
 export const BusinessShow = () => (
-  <Show title="Business Details">
+  <Show title="Business Overview">
     <TabbedShowLayout sx={{ "& .RaTabbedShowLayout-content": { p: 3 } }}>
-      {/* Вкладка 1: Основное */}
-      <Tab label="General Info">
+      {/* Вкладка 1: Основная информация */}
+      <Tab label="General">
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 8 }}>
             <Labeled label="Business Name">
@@ -40,95 +43,151 @@ export const BusinessShow = () => (
               />
             </Labeled>
           </Grid>
-
           <Grid size={12}>
             <Labeled label="Description">
-              <TextField source="description" />
+              <TextField
+                source="description"
+                component="pre"
+                sx={{ whiteSpace: "pre-wrap" }}
+              />
             </Labeled>
           </Grid>
-
-          <Grid size={{ xs: 12, md: 4 }}>
-            <BooleanField source="isPublished" label="Is Live" />
+          <Grid size={{ xs: 6, md: 3 }}>
+            <BooleanField source="isPublished" label="Published Status" />
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 6, md: 3 }}>
             <TextField source="languageCode" label="Language" />
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <DateField source="updatedAt" label="Last Update" />
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Box sx={{ display: "flex", gap: 4 }}>
+              <Labeled label="Created At">
+                <DateField source="createdAt" showTime />
+              </Labeled>
+              <Labeled label="Last Updated">
+                <DateField source="updatedAt" showTime />
+              </Labeled>
+            </Box>
           </Grid>
         </Grid>
       </Tab>
 
-      {/* Вкладка 2: Локация */}
-      <Tab label="Location">
+      {/* Вкладка 2: География */}
+      <Tab label="Geography">
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Labeled label="Province">
-              <ReferenceField
-                source="provinceId"
-                reference="provinces"
-                link="show"
-              >
-                <TextField source="name" />
-              </ReferenceField>
-            </Labeled>
+            <ReferenceField
+              source="provinceId"
+              reference="provinces"
+              link="show"
+            >
+              <TextField source="name" />
+            </ReferenceField>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Labeled label="City">
-              <ReferenceField source="cityId" reference="cities" link="show">
-                <TextField source="name" />
-              </ReferenceField>
-            </Labeled>
+            <ReferenceField source="cityId" reference="cities" link="show">
+              <TextField source="name" />
+            </ReferenceField>
           </Grid>
-
           <Grid size={12}>
-            <Divider sx={{ my: 1 }}>GPS Coordinates</Divider>
-          </Grid>
-
-          <Grid size={{ xs: 6, md: 3 }}>
-            <Labeled label="Latitude">
-              <NumberField source="location.latitude" />
-            </Labeled>
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="subtitle2" gutterBottom>
+              Location Coordinates
+            </Typography>
           </Grid>
           <Grid size={{ xs: 6, md: 3 }}>
-            <Labeled label="Longitude">
-              <NumberField source="location.longitude" />
-            </Labeled>
+            <TextField source="location.latitude" label="Latitude" />
+          </Grid>
+          <Grid size={{ xs: 6, md: 3 }}>
+            <TextField source="location.longitude" label="Longitude" />
+          </Grid>
+          <Grid size={12}>
+            <UrlField
+              source="googleMapsUrl"
+              label="Google Maps Link"
+              target="_blank"
+            />
           </Grid>
         </Grid>
       </Tab>
 
-      {/* Вкладка 3: Категории */}
+      {/* Вкладка 3: Категории и Теги */}
       <Tab label="Taxonomy">
-        <Box mb={3}>
-          <Typography variant="h6" gutterBottom>
-            Primary Category
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="subtitle1" color="primary" gutterBottom>
+            Google Categories
           </Typography>
-          <ReferenceField
-            source="primaryCategoryId"
-            reference="google-categories"
-          >
-            <TextField source="nameEn" />
-          </ReferenceField>
+          <Labeled label="Primary Category">
+            <ReferenceField
+              source="primaryCategoryId"
+              reference="google-categories"
+            >
+              <TextField source="nameEn" />
+            </ReferenceField>
+          </Labeled>
+
+          <Box sx={{ mt: 2 }}>
+            <ReferenceArrayField
+              source="additionalCategoryIds"
+              reference="google-categories"
+            >
+              <SingleFieldList linkType="show">
+                <ChipField
+                  source="nameEn"
+                  variant="outlined"
+                  color="secondary"
+                />
+              </SingleFieldList>
+            </ReferenceArrayField>
+          </Box>
         </Box>
 
-        <Typography variant="h6" gutterBottom>
-          Tags
-        </Typography>
-        <ArrayField source="tags">
-          <Datagrid bulkActionButtons={false}>
-            <TextField source="nameEn" label="English" />
-            <TextField source="nameEs" label="Spanish" />
-          </Datagrid>
-        </ArrayField>
+        <Divider sx={{ my: 3 }} />
+
+        <Box>
+          <Typography variant="subtitle1" color="primary" gutterBottom>
+            Tags
+          </Typography>
+          <ReferenceArrayField source="tagIds" reference="tags">
+            <SingleFieldList linkType="show">
+              <ChipField source="nameEn" />
+            </SingleFieldList>
+          </ReferenceArrayField>
+        </Box>
       </Tab>
 
-      {/* Вкладка 4: Расписание */}
+      {/* Вкладка 4: Медиа (Галерея) */}
+      <Tab label="Media">
+        <Typography variant="subtitle1" gutterBottom>
+          Business Gallery
+        </Typography>
+        <ReferenceArrayField source="mediaIds" reference="media">
+          <SingleFieldList
+            linkType="show"
+            sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}
+          >
+            <ImageField
+              source="url"
+              title="slug"
+              sx={{
+                "& img": {
+                  width: 180,
+                  height: 180,
+                  objectFit: "cover",
+                  borderRadius: 2,
+                  boxShadow: 2,
+                },
+              }}
+            />
+          </SingleFieldList>
+        </ReferenceArrayField>
+      </Tab>
+
+      {/* Вкладка 5: Расписание */}
       <Tab label="Schedule">
         <ArrayField source="schedule">
-          <Datagrid bulkActionButtons={false} sx={{ mb: 2 }}>
-            <TextField source="days" label="Days (0=Sun)" />
-            <ArrayField source="intervals" label="Time Windows">
+          <Datagrid bulkActionButtons={false}>
+            <TextField source="days" label="Days (Raw)" />
+            <ArrayField source="intervals" label="Time Slots">
               <Datagrid bulkActionButtons={false}>
                 <TextField source="start" label="Open" />
                 <TextField source="end" label="Close" />
@@ -138,11 +197,11 @@ export const BusinessShow = () => (
         </ArrayField>
       </Tab>
 
-      {/* Вкладка 5: SEO & Contacts */}
+      {/* Вкладка 6: Контакты и SEO */}
       <Tab label="SEO & Contacts">
-        <Paper variant="outlined" sx={{ p: 2, mb: 3, bgcolor: "grey.50" }}>
+        <Paper variant="outlined" sx={{ p: 2, mb: 3, bgcolor: "#fafafa" }}>
           <Typography variant="subtitle1" color="primary" gutterBottom>
-            Contact Channels
+            Communication
           </Typography>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -161,14 +220,14 @@ export const BusinessShow = () => (
         </Paper>
 
         <Typography variant="subtitle1" color="primary" gutterBottom>
-          Search Engine Optimization
+          SEO Metadata
         </Typography>
         <Grid container spacing={2}>
           <Grid size={12}>
-            <TextField source="seo.title" label="Meta Title" />
+            <TextField source="seo.title" label="SEO Title" />
           </Grid>
           <Grid size={12}>
-            <TextField source="seo.description" label="Meta Description" />
+            <TextField source="seo.description" label="SEO Description" />
           </Grid>
         </Grid>
       </Tab>
