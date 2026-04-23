@@ -34,7 +34,6 @@ const MediaOptionRenderer = (choice: MediaRecord) => {
  * Изолированный компонент управления галереей для ресурсов Business.
  */
 export const BusinessMediaFields = () => {
-  // Наблюдаем за выбранными ID
   const mediaIds = useWatch({ name: "mediaIds" }) || [];
 
   return (
@@ -50,7 +49,15 @@ export const BusinessMediaFields = () => {
           inputText={(record: MediaRecord) => record.slug}
           fullWidth
           shouldRenderSuggestions={(val: string) => val.length > 0}
-          helperText="Select existing images from your media library."
+          helperText="Type to search. Use 'Enter' to select and continue typing."
+          // В RA v5 пропсы MUI Autocomplete передаются напрямую в компонент
+          disableCloseOnSelect
+          // Перехватываем Enter, чтобы форма не отправлялась
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.stopPropagation();
+            }
+          }}
         />
       </ReferenceArrayInput>
 
@@ -68,13 +75,10 @@ export const BusinessMediaFields = () => {
               border: "1px dashed #ccc",
             }}
           >
-            {/* Для ReferenceArrayField передаем объект с фиктивным id, 
-                чтобы удовлетворить требованиям интерфейса RaRecord 
-            */}
             <ReferenceArrayField
               source="mediaIds"
               reference="media"
-              record={{ id: "provisional-id", mediaIds }}
+              record={{ id: "preview-context", mediaIds }}
             >
               <SingleFieldList
                 linkType={false}
