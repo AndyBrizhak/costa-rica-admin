@@ -8,13 +8,10 @@ import {
   AutocompleteInput,
   ReferenceArrayInput,
   AutocompleteArrayInput,
-  ArrayInput,
-  SimpleFormIterator,
   required,
-  DateField,
 } from "react-admin";
 import { Grid, Typography, Divider, Button, Box } from "@mui/material";
-import { useFormContext, useWatch } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import { SlugAutoFiller } from "./SlugAutoFiller";
 import { isSlug } from "../utils/validators";
 import { BusinessMediaFields } from "./BusinessMediaFields";
@@ -28,7 +25,7 @@ const GoogleMapsParser = () => {
 
   const handleParse = () => {
     if (!mapsUrl) return;
-    const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+    const regex = /@(-?\\d+\\.\\d+),(-?\\d+\\.\\d+)/;
     const match = mapsUrl.match(regex);
     if (match) {
       setValue("location.latitude", parseFloat(match[1]), {
@@ -44,275 +41,139 @@ const GoogleMapsParser = () => {
     <Button
       variant="outlined"
       onClick={handleParse}
-      size="small"
-      sx={{ mt: 1 }}
       disabled={!mapsUrl}
+      sx={{ mt: 1 }}
     >
-      Parse GPS from URL
+      Parse Coordinates
     </Button>
   );
 };
 
 /**
- * Вкладка Географии: Умная фильтрация городов.
+ * Страница редактирования бизнеса (Шаг 3).
+ * * Изменения:
+ * 1. Разделены вкладки Tags и Media Gallery.
+ * 2. Использован BusinessMediaFields для управления медиа.
+ * 3. Grid v2: удалены 'item', размеры через 'size'.
+ * 4. Все элементы выровнены по левому краю.
  */
-const GeographyTabFields = () => {
-  const provinceId = useWatch({ name: "provinceId" });
-
-  return (
-    <Grid container spacing={2}>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ReferenceInput source="provinceId" reference="provinces">
-          <AutocompleteInput
-            optionText="name"
-            label="Province"
-            validate={[required()]}
-            fullWidth
-          />
-        </ReferenceInput>
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ReferenceInput
-          source="cityId"
-          reference="cities"
-          sort={{ field: "name", order: "ASC" }}
-          filter={provinceId ? { provinceId } : {}}
-          perPage={100}
-        >
-          <AutocompleteInput
-            optionText="name"
-            label={
-              provinceId
-                ? "City (Full list for province)"
-                : "City (Type to search)"
-            }
-            fullWidth
-            shouldRenderSuggestions={(val: string) =>
-              provinceId ? true : val.length > 0
-            }
-            noOptionsText={
-              provinceId
-                ? "No cities found for this province"
-                : "Type to search..."
-            }
-          />
-        </ReferenceInput>
-      </Grid>
-
-      <Grid size={12} sx={{ mt: 2 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Maps Integration
-        </Typography>
-        <TextInput source="googleMapsUrl" label="Google Maps Link" fullWidth />
-        <GoogleMapsParser />
-      </Grid>
-
-      <Grid size={{ xs: 6, md: 3 }}>
-        <TextInput source="location.latitude" label="Latitude" fullWidth />
-      </Grid>
-      <Grid size={{ xs: 6, md: 3 }}>
-        <TextInput source="location.longitude" label="Longitude" fullWidth />
-      </Grid>
-    </Grid>
-  );
-};
-
-/**
- * Вкладка Таксономии: Категории и зависимые теги.
- */
-const TaxonomyTabFields = () => {
-  const selectedTagGroupId = useWatch({ name: "ui_tag_group_id" });
-
-  return (
-    <Grid container spacing={2}>
-      <Grid size={12}>
-        <ReferenceInput
-          source="primaryCategoryId"
-          reference="google-categories"
-        >
-          <AutocompleteInput
-            optionText="nameEn"
-            label="Primary Google Category"
-            fullWidth
-            shouldRenderSuggestions={(val: string) => val.length > 0}
-          />
-        </ReferenceInput>
-      </Grid>
-
-      <Grid size={12}>
-        <ReferenceArrayInput
-          source="additionalCategoryIds"
-          reference="google-categories"
-        >
-          <AutocompleteArrayInput
-            optionText="nameEn"
-            label="Additional Google Categories"
-            fullWidth
-            shouldRenderSuggestions={(val: string) => val.length > 0}
-          />
-        </ReferenceArrayInput>
-      </Grid>
-
-      <Grid size={12}>
-        <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1 }}>
-          <Typography variant="subtitle2" gutterBottom color="primary">
-            Tag Management Tool
-          </Typography>
-
-          <ReferenceInput source="ui_tag_group_id" reference="tag-groups">
-            <AutocompleteInput
-              label="1. Filter by Tag Group"
-              optionText="nameEn"
-              fullWidth
-            />
-          </ReferenceInput>
-
-          <ReferenceArrayInput
-            source="tagIds"
-            reference="tags"
-            filter={
-              selectedTagGroupId
-                ? { tagGroupId: selectedTagGroupId }
-                : { id: "00000000-0000-0000-0000-000000000000" }
-            }
-          >
-            <AutocompleteArrayInput
-              optionText="nameEn"
-              label="2. Select Tags from Group"
-              fullWidth
-              disabled={!selectedTagGroupId}
-            />
-          </ReferenceArrayInput>
-        </Box>
-      </Grid>
-    </Grid>
-  );
-};
-
 export const BusinessEdit = () => (
-  <Edit title="Edit Business" mutationMode="pessimistic" redirect="show">
-    <TabbedForm>
-      {/* Вкладка 1: Основное */}
+  <Edit title="Edit Business" mutationMode="pessimistic">
+    <TabbedForm
+      sx={{
+        "& .MuiGrid-container": {
+          justifyContent: "flex-start",
+          textAlign: "left",
+        },
+        "& .RaTabbedForm-content": { p: 2 },
+      }}
+    >
+      {/* --- Вкладка 1: General --- */}
       <FormTab label="General">
         <SlugAutoFiller />
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 8 }}>
-            <TextInput
-              source="name"
-              label="Business Name"
-              validate={[required()]}
-              fullWidth
-            />
+            <TextInput source="name" validate={required()} fullWidth />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
+            <BooleanInput source="isPublished" label="Published" />
+          </Grid>
+          <Grid size={{ xs: 12, md: 8 }}>
             <TextInput
               source="slug"
-              label="URL Slug"
               validate={[required(), isSlug]}
               fullWidth
             />
           </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <TextInput source="languageCode" validate={required()} fullWidth />
+          </Grid>
           <Grid size={12}>
             <TextInput
               source="description"
-              label="Description"
               multiline
-              rows={3}
+              rows={4}
               fullWidth
+              helperText="HTML description from .NET CMS"
             />
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <BooleanInput source="isPublished" label="Is Published" />
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <TextInput
-              source="languageCode"
-              label="Language"
-              validate={[required()]}
-              fullWidth
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Box sx={{ pt: 1 }}>
-              <Typography
-                variant="caption"
-                display="block"
-                color="textSecondary"
-              >
-                Created
-              </Typography>
-              <DateField source="createdAt" showTime />
-              <Typography
-                variant="caption"
-                display="block"
-                color="textSecondary"
-                sx={{ mt: 1 }}
-              >
-                Last Update
-              </Typography>
-              <DateField source="updatedAt" showTime />
-            </Box>
           </Grid>
         </Grid>
       </FormTab>
 
-      {/* Вкладка 2: География */}
-      <FormTab label="Geography">
-        <GeographyTabFields />
-      </FormTab>
-
-      {/* Вкладка 3: Категории и теги */}
-      <FormTab label="Taxonomy">
-        <TaxonomyTabFields />
-      </FormTab>
-
-      {/* Вкладка 4: Медиа */}
-      <FormTab label="Media">
-        <BusinessMediaFields />
-      </FormTab>
-
-      {/* Вкладка 5: Расписание */}
-      <FormTab label="Schedule">
-        <ArrayInput source="schedule" label={false}>
-          <SimpleFormIterator inline>
-            <AutocompleteArrayInput
-              source="days"
-              label="Days"
-              choices={[
-                { id: 1, name: "Monday" },
-                { id: 2, name: "Tuesday" },
-                { id: 3, name: "Wednesday" },
-                { id: 4, name: "Thursday" },
-                { id: 5, name: "Friday" },
-                { id: 6, name: "Saturday" },
-                { id: 0, name: "Sunday" },
-              ]}
-              sx={{ minWidth: 200 }}
+      {/* --- Вкладка 2: Location & Categories --- */}
+      <FormTab label="Location & Categories">
+        <Typography variant="h6" gutterBottom color="primary">
+          Geography
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid size={12}>
+            <TextInput
+              source="googleMapsUrl"
+              label="Google Maps URL (@lat,lng)"
+              fullWidth
+              helperText="Paste link to parse coordinates automatically"
             />
-            <ArrayInput source="intervals" label="Time Slots">
-              <SimpleFormIterator inline>
-                <TextInput
-                  source="start"
-                  label="Open"
-                  type="time"
-                  sx={{ width: 120 }}
-                />
-                <TextInput
-                  source="end"
-                  label="Close"
-                  type="time"
-                  sx={{ width: 120 }}
-                />
-              </SimpleFormIterator>
-            </ArrayInput>
-          </SimpleFormIterator>
-        </ArrayInput>
+            <GoogleMapsParser />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ReferenceInput source="provinceId" reference="provinces">
+              <AutocompleteInput optionText="name" label="Province" fullWidth />
+            </ReferenceInput>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ReferenceInput source="cityId" reference="cities">
+              <AutocompleteInput optionText="name" label="City" fullWidth />
+            </ReferenceInput>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextInput source="location.latitude" label="Latitude" fullWidth />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextInput
+              source="location.longitude"
+              label="Longitude"
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="h6" gutterBottom color="primary">
+          Categories
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ReferenceInput
+              source="primaryCategoryId"
+              reference="google-categories"
+            >
+              <AutocompleteInput
+                optionText="nameEn"
+                label="Primary Category"
+                fullWidth
+              />
+            </ReferenceInput>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ReferenceArrayInput
+              source="secondaryCategoryIds"
+              reference="google-categories"
+            >
+              <AutocompleteArrayInput
+                optionText="nameEn"
+                label="Secondary Categories"
+                fullWidth
+              />
+            </ReferenceArrayInput>
+          </Grid>
+        </Grid>
       </FormTab>
 
-      {/* Вкладка 6: Контакты и SEO */}
-      <FormTab label="SEO & Contacts">
-        <Typography variant="h6" gutterBottom>
-          Communication
+      {/* --- Вкладка 3: Contacts & SEO --- */}
+      <FormTab label="Contacts & SEO">
+        <Typography variant="h6" gutterBottom color="primary">
+          Contacts
         </Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -344,8 +205,10 @@ export const BusinessEdit = () => (
             />
           </Grid>
         </Grid>
+
         <Divider sx={{ my: 3 }} />
-        <Typography variant="h6" gutterBottom>
+
+        <Typography variant="h6" gutterBottom color="primary">
           SEO Metadata
         </Typography>
         <Grid container spacing={2}>
@@ -362,6 +225,27 @@ export const BusinessEdit = () => (
             />
           </Grid>
         </Grid>
+      </FormTab>
+
+      {/* --- Вкладка 4: Tags --- */}
+      <FormTab label="Tags">
+        <Box sx={{ mt: 1 }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            Attached Tags
+          </Typography>
+          <ReferenceArrayInput source="tagIds" reference="tags">
+            <AutocompleteArrayInput
+              optionText="nameEn"
+              label="Search and Add Tags"
+              fullWidth
+            />
+          </ReferenceArrayInput>
+        </Box>
+      </FormTab>
+
+      {/* --- Вкладка 5: Media Gallery --- */}
+      <FormTab label="Media Gallery">
+        <BusinessMediaFields />
       </FormTab>
     </TabbedForm>
   </Edit>
