@@ -3,38 +3,42 @@ import { Box, Typography, Link, Stack, Divider } from "@mui/material";
 import { useWatch } from "react-hook-form";
 
 /**
- * Исправленный компонент управления медиа (Шаг 1).
- * Теперь он видит данные сразу после загрузки страницы и корректно правит ссылки.
+ * Интерфейс для строгого описания объекта медиа.
+ */
+interface MediaAsset {
+  id: string;
+  slug: string;
+  fileName: string;
+}
+
+/**
+ * Компонент управления медиа-галереей бизнеса.
+ * Исправлено:
+ * 1. Ошибка 'mediaIds is never read' (переменная теперь используется в логике).
+ * 2. Ошибки типизации перегрузок и 'any'.
+ * 3. Реактивность: список ссылок учитывает актуальное количество выбранных ID.
  */
 export const BusinessMediaFields = () => {
-  // 1. Наблюдаем за РЕАЛЬНЫМИ объектами медиа, которые прислал бэкенд
-  const media = useWatch({ name: "media" }) || [];
-  // 2. Наблюдаем за изменениями в инпуте (для новых добавлений)
-  const mediaIds = useWatch({ name: "mediaIds" }) || [];
+  // Наблюдаем за объектами и за массивом ID.
+  // Используем 'as', чтобы избежать конфликтов перегрузок useWatch в TS.
+  const media = useWatch({ name: "media" }) as MediaAsset[] | undefined;
+  const mediaIds = useWatch({ name: "mediaIds" }) as string[] | undefined;
 
-  // Получаем корректный базовый URL из окружения
   const apiUrl = import.meta.env.VITE_API_URL || "";
+
+  // Безопасный расчет корня хоста
   const host = apiUrl.endsWith("/api")
     ? apiUrl.substring(0, apiUrl.lastIndexOf("/api"))
     : apiUrl;
 
-  /**
-   * Функция формирования ссылки.
-   * Если бэкенд прислал localhost, мы меняем его на актуальный host из .env
-   */
-  const formatFullUrl = (record: any) => {
-    if (!record) return "";
-    // Если есть fileName, строим путь с нуля (самый надежный способ)
-    if (record.fileName) {
-      return `${host}/media-files/${record.fileName}`;
-    }
-    // Если fileName нет, берем url и правим localhost на наш хост
-    if (record.url && record.url.includes("localhost")) {
-      const path = record.url.split(":5046")[1]; // забираем всё после порта
-      return `${host}${path}`;
-    }
-    return record.url || "";
+  const getUrl = (asset: MediaAsset): string => {
+    if (!asset.fileName) return "";
+    return `${host}/media-files/${asset.fileName}`;
   };
+
+  // Подготавливаем данные для рендеринга
+  const activeMedia = Array.isArray(media) ? media : [];
+  const totalCount = Array.isArray(mediaIds) ? mediaIds.length : 0;
 
   return (
     <Box sx={{ textAlign: "left", width: "100%" }}>
@@ -42,26 +46,30 @@ export const BusinessMediaFields = () => {
         variant="h6"
         gutterBottom
         color="primary"
-        sx={{ fontWeight: 600 }}
+        sx={{ fontWeight: 600, textAlign: "left" }}
       >
         Media Assets Management
       </Typography>
 
-      {/* --- БЛОК ОТОБРАЖЕНИЯ ССЫЛОК --- */}
-      <Box sx={{ mb: 3 }}>
+      {/* --- СПИСОК ССЫЛОК --- */}
+      <Box sx={{ mb: 3, textAlign: "left" }}>
         <Typography
           variant="subtitle2"
           gutterBottom
-          sx={{ color: "text.secondary", fontWeight: "bold" }}
+          sx={{
+            color: "text.secondary",
+            fontWeight: "bold",
+            textAlign: "left",
+          }}
         >
-          Active Media Links:
+          Active Media Links ({totalCount}):
         </Typography>
 
-        {/* Проверяем наличие данных в media (то что пришло) или mediaIds (то что добавили) */}
-        {media.length > 0 || mediaIds.length > 0 ? (
+        {activeMedia.length > 0 ? (
           <Stack spacing={1.5} sx={{ mt: 1, alignItems: "flex-start" }}>
-            {media.map((m: any) => {
-              const fullUrl = formatFullUrl(m);
+            {activeMedia.map((m) => {
+              const fullUrl = getUrl(m);
+              if (!fullUrl) return null;
               return (
                 <Box
                   key={m.id}
@@ -73,7 +81,11 @@ export const BusinessMediaFields = () => {
                 >
                   <Typography
                     variant="caption"
-                    sx={{ color: "text.secondary", fontWeight: "bold" }}
+                    sx={{
+                      color: "text.secondary",
+                      fontWeight: "bold",
+                      textAlign: "left",
+                    }}
                   >
                     Slug: {m.slug}
                   </Typography>
@@ -85,6 +97,7 @@ export const BusinessMediaFields = () => {
                       fontSize: "0.85rem",
                       wordBreak: "break-all",
                       textDecoration: "none",
+                      textAlign: "left",
                       "&:hover": { textDecoration: "underline" },
                     }}
                   >
@@ -97,23 +110,30 @@ export const BusinessMediaFields = () => {
         ) : (
           <Typography
             variant="body2"
-            sx={{ fontStyle: "italic", color: "grey.500", mt: 1 }}
+            sx={{
+              fontStyle: "italic",
+              color: "grey.500",
+              mt: 1,
+              textAlign: "left",
+            }}
           >
-            No images linked yet.
+            {totalCount > 0
+              ? "Saving changes will update the links list..."
+              : "No images linked yet."}
           </Typography>
         )}
       </Box>
 
       <Divider sx={{ my: 3 }} />
 
-      {/* --- БЛОК УПРАВЛЕНИЯ --- */}
-      <Box>
+      {/* --- УПРАВЛЕНИЕ СВЯЗЯМИ --- */}
+      <Box sx={{ textAlign: "left" }}>
         <Typography
           variant="subtitle2"
           gutterBottom
-          sx={{ fontWeight: "bold", mb: 1 }}
+          sx={{ fontWeight: "bold", mb: 1, textAlign: "left" }}
         >
-          Edit Media Connections:
+          Edit Connections (Search by Slug):
         </Typography>
         <ReferenceArrayInput source="mediaIds" reference="media">
           <AutocompleteArrayInput
@@ -137,9 +157,9 @@ export const BusinessMediaFields = () => {
         <Typography
           variant="caption"
           color="textSecondary"
-          sx={{ display: "block", mt: 1 }}
+          sx={{ display: "block", mt: 1, textAlign: "left" }}
         >
-          * Search by slug to add. Click 'X' on a tag to remove.
+          * Search by slug to add. Click 'X' on a tag to remove a link.
         </Typography>
       </Box>
     </Box>
