@@ -25,7 +25,7 @@ const GoogleMapsParser = () => {
 
   const handleParse = () => {
     if (!mapsUrl) return;
-    const regex = /@(-?\\d+\\.\\d+),(-?\\d+\\.\\d+)/;
+    const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
     const match = mapsUrl.match(regex);
     if (match) {
       setValue("location.latitude", parseFloat(match[1]), {
@@ -50,15 +50,11 @@ const GoogleMapsParser = () => {
 };
 
 /**
- * Страница редактирования бизнеса (Шаг 3).
- * * Изменения:
- * 1. Разделены вкладки Tags и Media Gallery.
- * 2. Использован BusinessMediaFields для управления медиа.
- * 3. Grid v2: удалены 'item', размеры через 'size'.
- * 4. Все элементы выровнены по левому краю.
+ * Страница редактирования бизнеса.
+ * Изменено: добавлен redirect="show" для перехода к просмотру после сохранения.
  */
 export const BusinessEdit = () => (
-  <Edit title="Edit Business" mutationMode="pessimistic">
+  <Edit title="Edit Business" mutationMode="pessimistic" redirect="show">
     <TabbedForm
       sx={{
         "& .MuiGrid-container": {
@@ -94,7 +90,7 @@ export const BusinessEdit = () => (
               multiline
               rows={4}
               fullWidth
-              helperText="HTML description from .NET CMS"
+              helperText="HTML description"
             />
           </Grid>
         </Grid>
@@ -109,9 +105,8 @@ export const BusinessEdit = () => (
           <Grid size={12}>
             <TextInput
               source="googleMapsUrl"
-              label="Google Maps URL (@lat,lng)"
+              label="Google Maps URL"
               fullWidth
-              helperText="Paste link to parse coordinates automatically"
             />
             <GoogleMapsParser />
           </Grid>
