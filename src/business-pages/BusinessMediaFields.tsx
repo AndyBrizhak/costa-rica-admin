@@ -1,10 +1,8 @@
+import { useEffect } from "react";
 import { ReferenceArrayInput, AutocompleteArrayInput } from "react-admin";
 import { Box, Typography, Link, Stack, Divider } from "@mui/material";
-import { useWatch } from "react-hook-form";
+import { useWatch, useFormContext } from "react-hook-form";
 
-/**
- * Интерфейс для строгого описания объекта медиа.
- */
 interface MediaAsset {
   id: string;
   slug: string;
@@ -12,33 +10,49 @@ interface MediaAsset {
 }
 
 /**
- * Компонент управления медиа-галереей бизнеса.
+ * Компонент управления медиа-галереей.
  * Исправлено:
- * 1. Ошибка 'mediaIds is never read' (переменная теперь используется в логике).
- * 2. Ошибки типизации перегрузок и 'any'.
- * 3. Реактивность: список ссылок учитывает актуальное количество выбранных ID.
+ * 1. Реализована синхронизация media -> mediaIds при загрузке (решает проблему Replace vs Append).
+ * 2. Поддержка удаления: удаление чипа в инпуте теперь корректно обновляет список ID для бэкенда.
+ * 3. Строгая типизация и выравнивание по левому краю.
  */
 export const BusinessMediaFields = () => {
-  // Наблюдаем за объектами и за массивом ID.
-  // Используем 'as', чтобы избежать конфликтов перегрузок useWatch в TS.
+  const { setValue } = useFormContext();
+
+  // Наблюдаем за исходными данными (объекты) и полем для отправки (ID)
   const media = useWatch({ name: "media" }) as MediaAsset[] | undefined;
   const mediaIds = useWatch({ name: "mediaIds" }) as string[] | undefined;
 
   const apiUrl = import.meta.env.VITE_API_URL || "";
+  const host = apiUrl.endsWith("/api") ? apiUrl.slice(0, -4) : apiUrl;
 
-  // Безопасный расчет корня хоста
-  const host = apiUrl.endsWith("/api")
-    ? apiUrl.substring(0, apiUrl.lastIndexOf("/api"))
-    : apiUrl;
+  /**
+   * ЭФФЕКТ СИНХРОНИЗАЦИИ:
+   * Если форма загрузилась, и у нас есть объекты в 'media', но список 'mediaIds' пуст,
+   * мы наполняем 'mediaIds' существующими идентификаторами.
+   * Это гарантирует, что бэкенд получит ПОЛНЫЙ список (старые + новые).
+   */
+  useEffect(() => {
+    if (
+      Array.isArray(media) &&
+      media.length > 0 &&
+      (!mediaIds || mediaIds.length === 0)
+    ) {
+      const initialIds = media.map((m) => m.id);
+      // Устанавливаем начальные значения в форму
+      setValue("mediaIds", initialIds, { shouldDirty: false });
+    }
+  }, [media, mediaIds, setValue]);
 
   const getUrl = (asset: MediaAsset): string => {
     if (!asset.fileName) return "";
     return `${host}/media-files/${asset.fileName}`;
   };
 
-  // Подготавливаем данные для рендеринга
+  // Для рендеринга списка ссылок используем актуальное состояние mediaIds
+  // (В идеале здесь нужен ReferenceArrayField, но для простоты и скорости
+  // используем текущие объекты, пока они не сохранены)
   const activeMedia = Array.isArray(media) ? media : [];
-  const totalCount = Array.isArray(mediaIds) ? mediaIds.length : 0;
 
   return (
     <Box sx={{ textAlign: "left", width: "100%" }}>
@@ -51,7 +65,7 @@ export const BusinessMediaFields = () => {
         Media Assets Management
       </Typography>
 
-      {/* --- СПИСОК ССЫЛОК --- */}
+      {/* --- СПИСОК АКТИВНЫХ ССЫЛОК --- */}
       <Box sx={{ mb: 3, textAlign: "left" }}>
         <Typography
           variant="subtitle2"
@@ -62,7 +76,7 @@ export const BusinessMediaFields = () => {
             textAlign: "left",
           }}
         >
-          Active Media Links ({totalCount}):
+          Current Active Links:
         </Typography>
 
         {activeMedia.length > 0 ? (
@@ -70,6 +84,10 @@ export const BusinessMediaFields = () => {
             {activeMedia.map((m) => {
               const fullUrl = getUrl(m);
               if (!fullUrl) return null;
+
+              // Отображаем только те ссылки, чьи ID есть в текущем наборе mediaIds
+              const isMarkedForDeletion = mediaIds && !mediaIds.includes(m.id);
+
               return (
                 <Box
                   key={m.id}
@@ -77,28 +95,27 @@ export const BusinessMediaFields = () => {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "flex-start",
+                    opacity: isMarkedForDeletion ? 0.4 : 1,
+                    textDecoration: isMarkedForDeletion
+                      ? "line-through"
+                      : "none",
                   }}
                 >
                   <Typography
                     variant="caption"
-                    sx={{
-                      color: "text.secondary",
-                      fontWeight: "bold",
-                      textAlign: "left",
-                    }}
+                    sx={{ color: "text.secondary", fontWeight: "bold" }}
                   >
-                    Slug: {m.slug}
+                    Slug: {m.slug}{" "}
+                    {isMarkedForDeletion && "(Will be removed after save)"}
                   </Typography>
                   <Link
-                    href={fullUrl}
-                    target="_blank"
+                    href={isMarkedForDeletion ? "#" : fullUrl}
+                    target={isMarkedForDeletion ? "_self" : "_blank"}
                     rel="noopener noreferrer"
                     sx={{
                       fontSize: "0.85rem",
                       wordBreak: "break-all",
-                      textDecoration: "none",
-                      textAlign: "left",
-                      "&:hover": { textDecoration: "underline" },
+                      pointerEvents: isMarkedForDeletion ? "none" : "auto",
                     }}
                   >
                     {fullUrl}
@@ -110,35 +127,28 @@ export const BusinessMediaFields = () => {
         ) : (
           <Typography
             variant="body2"
-            sx={{
-              fontStyle: "italic",
-              color: "grey.500",
-              mt: 1,
-              textAlign: "left",
-            }}
+            sx={{ fontStyle: "italic", color: "grey.500", mt: 1 }}
           >
-            {totalCount > 0
-              ? "Saving changes will update the links list..."
-              : "No images linked yet."}
+            No images linked.
           </Typography>
         )}
       </Box>
 
       <Divider sx={{ my: 3 }} />
 
-      {/* --- УПРАВЛЕНИЕ СВЯЗЯМИ --- */}
+      {/* --- УПРАВЛЕНИЕ (ДОБАВЛЕНИЕ И УДАЛЕНИЕ ПО ID) --- */}
       <Box sx={{ textAlign: "left" }}>
         <Typography
           variant="subtitle2"
           gutterBottom
-          sx={{ fontWeight: "bold", mb: 1, textAlign: "left" }}
+          sx={{ fontWeight: "bold", mb: 1 }}
         >
-          Edit Connections (Search by Slug):
+          Sync Media IDs (Search by Slug):
         </Typography>
         <ReferenceArrayInput source="mediaIds" reference="media">
           <AutocompleteArrayInput
             optionText="slug"
-            label="Linked Media Assets"
+            label="Selected Identifiers"
             fullWidth
             sx={{
               "& .MuiInputLabel-root": {
@@ -146,20 +156,18 @@ export const BusinessMediaFields = () => {
                 transformOrigin: "top left",
               },
               "& .MuiAutocomplete-input": { textAlign: "left" },
-              "& .MuiAutocomplete-tag": {
-                borderRadius: 1,
-                fontSize: "0.75rem",
-                fontWeight: "bold",
-              },
+              "& .MuiAutocomplete-tag": { borderRadius: 1, fontWeight: "bold" },
             }}
           />
         </ReferenceArrayInput>
         <Typography
           variant="caption"
           color="textSecondary"
-          sx={{ display: "block", mt: 1, textAlign: "left" }}
+          sx={{ display: "block", mt: 1 }}
         >
-          * Search by slug to add. Click 'X' on a tag to remove a link.
+          * To <b>add</b>: start typing the slug. To <b>delete</b>: click the
+          'X' on the tag. The identifiers will be updated in the database upon
+          saving.
         </Typography>
       </Box>
     </Box>
